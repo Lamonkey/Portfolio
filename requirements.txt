@@ -1,0 +1,9 @@
+asgiref @ file:///tmp/build/80754af9/asgiref_1625643473416/work
+certifi==2021.10.8
+Django @ file:///tmp/build/80754af9/django_1625585912945/work
+olefile @ file:///Users/ktietz/demo/mc3/conda-bld/olefile_1629805411829/work
+Pillow==8.4.0
+psycopg2 @ file:///opt/concourse/worker/volumes/live/7541fe58-2a45-4073-5d69-313e733fc729/volume/psycopg2_1612298592535/work
+pytz==2021.3
+sqlparse @ file:///tmp/build/80754af9/sqlparse_1602184451250/work
+typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1631814937681/work
