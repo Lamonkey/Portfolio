@@ -1,13 +1,13 @@
+{%load static%}
 <!DOCTYPE html>
 <html　lang=“en">
 
 <head>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
         integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-
-    <script src="script.js"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'homepage/style.css' %}">
+    
+    <link rel="stylesheet" href="{% static 'homepage/script.js' %}">
 
 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -21,7 +21,7 @@
 
 </head>
 
-<body ng-app="myApp" ng-controller="myCtrl">
+<body>
     <section class="container">
 
         <div class="row justify-content-center">
@@ -36,8 +36,7 @@
             <div class="col-12 justify-content-md-center">
                 <p>
                     My name is Jianlin Chen, a computer science graduate from NC State University.
-                    The research fields I interested in are machine learning and AI. During my free time, I like hiking
-                    and camping.
+                    The research fields I interested in are machine learning and AI.
                     I also love making video games,
                     web app, and mobile app along or collaborate with others.
                 </p>
@@ -57,41 +56,37 @@
 
             <div id="menu" class="col-12 text-center d-none d-sm-block d-md-none. ">
                 <div>
-                    <button ng-click="showAll()" class="btn btn-info btn-md"> All </button>
-
-
-                    <button ng-click="showGame()" class="btn btn-info btn-md"> Games </button>
-
-
-                    <button ng-click="showWeb()" class="btn btn-info btn-md"> WebApp </button>
-
-
-                    <button ng-click="showMachineLearning()" class="btn btn-info btn-md"> Machine Learning </button>
+                    {% for label in labels%}
+                        <button class='btn btn-info btn-md'> {{ label }} </button>
+                    {% endfor %}
+                    
                 </div>
             </div>
         </section>
-        <section class="row">
 
+        <section class="row">
             <div class="w-100"></div>
             <!-- <div class="col-12"> -->
             <div>
-                <ul class="list-group" id="projects_list">
-                    <li class="list-group-item" ng-repeat="p in projects">
+                <ul class="list-group" id="projectlist">
+                    {% for project in projects%}
+                    <li class="list-group-item">
+                        <div class = "category">
+                            <p hidden> {{ project.type }} <p>
+                        </div>
                         <div class="row">
                             <div class=" col-md-7 col-sm-7 col-12">
-                                <img ng-src="{{p.img}}" class="image-responsive" alt="{{p.title}}">
+                                <img src="{{ project.image.url}}" class="image-responsive" alt="{{project.title}}">
                             </div>
 
                             <div class=" col-md-5 col-sm-5 col-12">
                                 <div class="row">
-
                                     <div class="col-11 col-md-11 col-sm-11">
-                                        <p id="title"> {{p.title}} </p>
-                                        <p id="description"> {{p.description}} </P>
+                                        <p id="title">  {{ project.title }}</p>
+                                        <p id="description">  {{ project.description}} </P>
                                     </div>
-
                                     <div class="col-12 col-md-12 col-sm-12 offset-3 offset-sm-0 offset-md-0">
-                                        <a class="btn btn-success" href={{p.url}} target=_blank role="button">Click to
+                                        <a class="btn btn-success" href={{project.link}} target=_blank role="button">Click to
                                             Checkout!</a>
                                     </div>
 
@@ -99,17 +94,14 @@
                             </div>
                         </div>
                     </li>
+                    {% endfor %}
                 </ul>
             </div>
 
 
             <!-- </div> -->
         </section>
-
-
-
-
-
+       
 
         <footer id="contact_info" class="row">
             <div class="col-6">
@@ -118,7 +110,7 @@
             </div>
 
             <div class="col-9">
-                Email: <a href="mailto:88therisingsun.com">88therisingsun@gmail.com</a>
+                Email: <a href="mailto:jchen42@ncsu.edu">jchen42@ncsu.edu</a>
 
             </div>
 
