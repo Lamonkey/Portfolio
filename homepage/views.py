@@ -10,8 +10,3 @@ def index(request):
         "labels":set(labels)
 
     })
-
-def greet(request,name):
-    return render(request,"homepage/greet.html",{
-        "name":name.capitalize()
-    })

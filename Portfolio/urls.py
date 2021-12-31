@@ -19,8 +19,6 @@ from django.conf import settings
 
 
 urlpatterns = [
-    path('tasks/',include("tasks.urls")),
-    path("newyear/",include("newyear.urls")),
     path('homepage/',include("homepage.urls")),
     path('admin/', admin.site.urls),
 ]
