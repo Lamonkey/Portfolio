@@ -7,3 +7,6 @@ class Project(models.Model):
     link = models.TextField()
     image = models.ImageField(upload_to="homepage/", height_field=None, width_field=None, max_length=None)
     type = models.CharField(max_length=64,blank=True)
+
+    def toDict(self):
+        return {'title':self.title,'description':self.description,'link':self.link,'image':self.image.url,'type':self.type}
