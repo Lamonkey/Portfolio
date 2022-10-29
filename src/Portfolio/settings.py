@@ -23,12 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)9&&gyjf!iz*d5*0#$j1$dpn=42y1m%e^c(v8j%vmx(w8v*3kg'
-
+SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1"]
 
 
 # Application definition
@@ -78,14 +77,19 @@ WSGI_APPLICATION = 'Portfolio.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+# DATABASE_NAME = os.getenv("DATABASE_NAME")
+# DATABASE_USER = os.getenv("DATABASE_USER")
+# DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
+# DATABASE_PORT = os.getenv("DATABASE_PORT")
+# DATABASE_HOST = os.getenv("DATABASE_HOST")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd93npsh6mcmin9',
-        'USER': 'lzolewnobgkzdl',
-        'PASSWORD': 'd9ea0db0dbaad6303f6962fd1c5c05efff50cfeef9dce1b49db215dd018a9e21',
-        'HOST': 'ec2-54-166-192-244.compute-1.amazonaws.com',
-        'PORT': '5432',
+        'NAME': os.getenv("DATABASE_NAME"),
+        'USER': os.getenv("DATABASE_USER"),
+        'PASSWORD': os.getenv("DATABASE_PASSWORD"),
+        'HOST': os.getenv("DATABASE_HOST"),        
+        'PORT': int(os.getenv("DATABASE_PORT")),
     }
 }
 
@@ -144,18 +148,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # django_heroku.settings(locals())
 
 #set up s3
-
-# AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-# AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-# AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-# AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
-
 AWS_DEFAULT_ACL = None
 AWS_S3_FILE_OVERWRITE = 'False'
-AWS_ACCESS_KEY_ID = 'AKIARQEQ7A25WOOD56MS'
-AWS_SECRET_ACCESS_KEY = '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'
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_STORAGE_BUCKET_NAME = 'lamonkey-portfolio-static'
-AWS_S3_REGION_NAME = 'us-east-1'
-#STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+AWS_ACCESS_KEY_ID =  os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+DEFAULT_FILE_STORAGE = os.getenv('DEFAULT_FILE_STORAGE')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
+# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'

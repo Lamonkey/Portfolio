@@ -1,6 +1,9 @@
 function loadJson(selector) {
   return JSON.parse($(selector).attr('data-json'))
 }
+//create an event to load the animation
+const event = new Event("load_animation");
+
 let jsonData;
 //load all project
 $(document).ready(function () {
@@ -47,50 +50,30 @@ $(document).ready(function () {
 
   //filter project
   $('.nav-link').click(function () {
-    //filter project
     let selected_type = $(this).attr("value")
-    let selected_project = $('.projects').filter(function () {
-      let types = $(this).attr("types").split(",")
-      return types.includes(selected_type)
-    });
-    let unselected_project = $('.projects').filter(function () {
-      let types = $(this).attr("types").split(",")
-      return !types.includes(selected_type)
-    });
-    //slide in selected project
-    selected_project.each(function (index, element) {
-      if ($(this).hasClass("animate__backOutLeft")) {
-        $(this).show()
-        $(this).addClass("animate__backInLeft").removeClass("animate__backOutLeft")
-        // $(this).on("animationend", () => {
-        //   // $(this).attr("hidden",false)
-        //   $(this).show()
-        // });
+    $(".projects").each(function (index) {
+      //show selected 
+      if ($(this).attr('types').split(",").includes(selected_type)) {
+        if ($(this).hasClass("animate__backOutLeft")) {
+          $(this).show()
+          $(this).removeClass("animate__backOutLeft");
+          $(this).addClass("animate__backInLeft");
+        }
       }
+      //hide unselected
+      else {
+        if ($(this).hasClass("animate__backInLeft")) {
+          $(this).addClass("animate__backOutLeft").removeClass("animate__backInLeft")
+          $(this).on("animationend", () => {
+            if($(this).hasClass("animate__backOutLeft")){
+              $(this).hide()
+            }
+          })
+
+        }
+
+      };
+
     })
-    //slide out unselected project
-    unselected_project.each(function (index, element) {
-      if ($(this).hasClass("animate__backInLeft")) {
-        $(this).addClass("animate__backOutLeft").removeClass("animate__backInLeft")
-        $(this).on("animationend", () => {
-          // $(this).attr("hidden",true)
-          if ($(this).hasClass("animate__backOutLeft")){
-            $(this).hide()
-          }
-        });
-      }
-    })
-    // $('.projects').on('animationend', () => {
-    //   //show when slide in 
-    //   if ($(this).hasClass("animate__backInLeft")) {
-    //     $(this).attr("hidden", false);
-    //     alert("unhide this project")
-    //   }
-    //   //hide when slide out
-    //   else if ($(this).hasClass("animate__backInLeft")) {
-    //     $(this).attr("hidden", true);
-    //     alert("hide this project")
-    //   }
-    // });
   })
 })
