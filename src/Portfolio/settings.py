@@ -27,8 +27,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "mysterious-crag-09703.herokuapp.com/*"]
-CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS.copy()
+ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "https://mysterious-crag-09703.herokuapp.com/*"]
+CSRF_TRUSTED_ORIGINS = ["https://mysterious-crag-09703.herokuapp.com/*"]
 # Application definition
 
 INSTALLED_APPS = [
