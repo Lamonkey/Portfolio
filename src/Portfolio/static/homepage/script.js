@@ -32,9 +32,10 @@ $(document).ready(function () {
       `<p class="description"> ${project.description} </p>` +
       '</div>' +
       ' <div class="col-12 col-md-12 col-sm-12 offset-3 offset-sm-0 offset-md-0">' +
-      `<a class="btn btn-success" href=${project.link} target=_blank` +
-      '  role="button">Click to' +
-      ' Checkout!</a>' +
+      '<div class="btn-group">'+
+      (project.link ? `<a class="btn btn-success" href=${project.link} target=_blank role="button"> Live Demo</a>` : '')+
+      (project.github_link ? `<a class="btn btn-primary" href=${project.github_link} target=_blank role="button"> Github</a>` : '')+
+      "</div>"+
       ' </div>' +
       ' </div>' +
       ' </div>' +
