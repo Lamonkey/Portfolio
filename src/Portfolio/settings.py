@@ -16,7 +16,7 @@ import django_heroku
 import dotenv
 
 # TODO comment out when deploying to heroku
-# dotenv.load_dotenv('/Users/lamonkey/Desktop/Portfolio/.env')
+dotenv.load_dotenv('/Users/lamonkey/Desktop/Portfolio/.env')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
