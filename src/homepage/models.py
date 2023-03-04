@@ -13,7 +13,11 @@ class Project(models.Model):
     type = models.CharField(max_length=64, blank=True)
 
     def toDict(self):
-        return {'title': self.title, 'description': markdown.markdown(self.description),'github_link':self.github_link, 'link': self.link, 'image': self.image.url, 'type': self.type.split(" ")}
+        return {'title': self.title.title(),
+                'description': markdown.markdown(self.description),
+                'github_link': self.github_link,
+                'link': self.link, 'image': self.image.url,
+                'type': self.type.split(" ")}
 
     def __str__(self):
         return f"{self.title}"

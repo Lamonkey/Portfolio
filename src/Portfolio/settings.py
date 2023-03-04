@@ -15,7 +15,8 @@ from pathlib import Path
 import django_heroku
 import dotenv
 
-dotenv.load_dotenv()
+# TODO comment out when deploying to heroku
+dotenv.load_dotenv('/Users/lamonkey/Desktop/Portfolio/.env')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,8 +30,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "https://mysterious-crag-09703.herokuapp.com/*"]
-CSRF_TRUSTED_ORIGINS = ["https://mysterious-crag-09703.herokuapp.com/*"]
+ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "https://lamonkey-portfolio.herokuapp.com/"]
+CSRF_TRUSTED_ORIGINS = ["https://lamonkey-portfolio.herokuapp.com/*"]
 # Application definition
 
 INSTALLED_APPS = [
