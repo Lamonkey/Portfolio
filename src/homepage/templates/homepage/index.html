@@ -19,7 +19,7 @@
       type=" text/css "
       href=" {% static 'homepage/style.css' %} "
     />
-   
+
     <meta
       name=" viewport "
       content=" width=device-width, initial-scale=1, shrink-to-fit=no "
@@ -76,23 +76,17 @@
               >
             </li>
             {% endfor %}
-            <li class="nav-item dark-mode-btn-container">
-              <input
-                type="checkbox"
-                class="btn-check"
-                id="mode-value"
-                autocomplete="off"
-                value="dark"
-              />
-              <label
-                class="btn btn-outline-primary dark-mode-btn"
-                for="btncheck1"
-                >Open Light</label
-              >
+            <li class="nav-item toggler">
+              <p>Light</p>
+              <div class="toggler-slider">
+                <div class="toggler-slider-circle"></div>
+              </div>
+              <p>Dark</p>
             </li>
+
             <li class="nav-item admin-btn">
               <a
-                class="btn btn-primary btn-small navbar-btn"
+                class="btn btn-outline-info btn-lg"
                 href=" {% url 'admin:index' %} "
                 >Admin</a
               >

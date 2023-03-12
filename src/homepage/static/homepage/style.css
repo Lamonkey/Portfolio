@@ -3,14 +3,12 @@
     font-size: 2em;
 } */
 
-.dark_mode {
-  font-family:  Arial, sans-serif;
-  font-size: x-large;
+body.dark_mode {
   color:white;
   background-color: rgb(4, 1, 22);
 }
 
-.light_mode{
+body{
   font-family:  Arial, sans-serif;
   font-size: x-large;
   color:black;
@@ -26,21 +24,13 @@
   margin-top: 100px;
   /* background-color: darkorange; */
 }
-.dark-mode-btn{
-  /* margin-left:auto; */
-  /* margin-right:5px */
-}
-.nav-btn-container{
-  /* width: 100%; */
-}
+
 .project-containner {
   margin-top: 100px;
   /* background-color: darkcyan; */
   
 }
-.project-image{
-  /* background-color: darkred; */
-}
+
 .project-image > img{
   max-width: 100%;
   object-fit: scale-down;
@@ -59,9 +49,7 @@
   max-width: 100%;
   overflow:auto;
 }
-.description-content{
-  /* background: darkorange; */
-}
+
 .description-title {
   font-weight: bolder;
   font-size: 1.5em;
@@ -73,4 +61,62 @@
 .contact_info > a:hover {
   text-decoration: underline;
 }
+.toggler{
+  display: flex;
+  align-items: center;
+  
+  
+}
+.toggler p {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: auto;
+  margin-bottom: auto;
+}
 
+.toggler-slider{
+  width: 40px;
+  height: 20px;
+  background-color: #2B283A;
+  border-radius: 2rem;
+  margin-inline: 7px;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  border: 1px solid black;
+  box-sizing: content-box;
+}
+.toggler-slider-circle {
+  height: 20px;
+    width: 20px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+nav.bg-dark .toggler-slider{
+  border-color: white;
+  background-color: #F5F5F5;
+  justify-content: flex-end;
+}
+
+nav.bg-dark .toggler-slider-circle {
+  background-color: black;
+}
+ .admin-btn{
+  
+  display:flex;
+  align-items: center;
+}
+
+.nav-btn-container{
+  width:100%;
+}
+.navbar-collapse.collapse.show .admin-btn{
+  margin-left:0;
+}
+@media (min-width: 992px) {
+  .admin-btn{
+    margin-left: auto;
+  }
+}

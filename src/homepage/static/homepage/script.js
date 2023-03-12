@@ -1,3 +1,5 @@
+var darkMode = true;
+
 document.addEventListener("click", function (event) {
   //filter button
   if (event.target.classList.contains("nav-link")) {
@@ -29,27 +31,49 @@ document.addEventListener("click", function (event) {
     }
   }
   //dark mode button
-  else if (event.target.classList.contains("dark-mode-btn")) {
-    let state = document.getElementById("mode-value").attributes.value.value;
-    if (state == "light") {
-      document.getElementById("mode-value").attributes.value.value = "dark";
-      event.target.innerHTML = "Open Light";
-      document.body.classList.remove("light_mode");
-      document.body.classList.add("dark_mode");
-      let navbar = document.getElementsByTagName("nav")[0];
-      navbar.classList.remove("bg-body-tertiary");
-      navbar.classList.add("bg-dark");
-      navbar.setAttribute("data-bs-theme","dark" );
-    } else {
-      document.getElementById("mode-value").attributes.value.value = "light";
-      event.target.innerHTML = "Close Light";
-      document.body.classList.remove("dark_mode");
-      document.body.classList.add("light_mode");
-      let navbar = document.getElementsByTagName("nav")[0];
-      navbar.classList.remove("bg-dark");
-      navbar.attributes.removeNamedItem("data-bs-theme");
-      navbar.classList.add("bg-body-tertiary");
+  else if (event.target.classList.contains("toggler-slider-circle") || 
+  event.target.classList.contains("toggler-slider")) {
+    darkMode = !darkMode
+
+    if (darkMode){
+      //add class to body
+      document.body.classList.add("dark_mode")
+      //add class to navbar
+      document.getElementsByTagName("nav")[0].classList.add('bg-dark')
+      //add attribute to navbar
+      document.getElementsByTagName("nav")[0].setAttribute('data-bs-theme','dark')
     }
+    else{
+      //remove class from body
+      document.body.classList.remove('dark_mode')
+      //remove class from navbar
+      document.getElementsByTagName("nav")[0].classList.remove('bg-dark')
+      document.getElementsByTagName("nav")[0].setAttribute('data-bs-theme','light')
+    }
+
+
+
+
+    // let state = document.getElementById("mode-value").attributes.value.value;
+    // if (state == "light") {
+    //   document.getElementById("mode-value").attributes.value.value = "dark";
+     
+    //   document.body.classList.remove("light_mode");
+    //   document.body.classList.add("dark_mode");
+    //   let navbar = document.getElementsByTagName("nav")[0];
+    //   navbar.classList.remove("bg-body-tertiary");
+    //   navbar.classList.add("bg-dark");
+    //   navbar.setAttribute("data-bs-theme","dark" );
+    // } else {
+    
+     
+    //   document.body.classList.remove("dark_mode");
+    //   document.body.classList.add("light_mode");
+    //   let navbar = document.getElementsByTagName("nav")[0];
+    //   navbar.classList.remove("bg-dark");
+    //   navbar.attributes.removeNamedItem("data-bs-theme");
+    //   navbar.classList.add("bg-body-tertiary");
+    // }
   }
 });
 //
