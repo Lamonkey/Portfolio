@@ -1,1 +1,1 @@
-web: python src/manage.py runserver 0.0.0.0:\$PORT
+web: gunicorn --chdir src wsgi --log-file -
