@@ -12,11 +12,11 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import os
 from pathlib import Path
-import django_heroku
 import dotenv
+import dj_database_url
 
 # TODO comment out when deploying to heroku
-dotenv.load_dotenv('/Users/lamonkey/Desktop/Portfolio/.env')
+dotenv.load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,24 +28,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('MODE', 'development') == 'development'
 
-ALLOWED_HOSTS = ["0.0.0.0", "127.0.0.1", "https://lamonkey-portfolio.herokuapp.com/"]
-CSRF_TRUSTED_ORIGINS = ["https://lamonkey-portfolio.herokuapp.com/*"]
+ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS")]
+CSRF_TRUSTED_ORIGINS = [os.getenv("CSRF_TRUSTED_ORIGINS")]
 # Application definition
 
 INSTALLED_APPS = [
-    'homepage',
+    'homepage.apps.HomepageConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'storages',
 ]
 
 MIDDLEWARE = [
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -78,21 +78,8 @@ WSGI_APPLICATION = 'Portfolio.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
-# DATABASE_NAME = os.getenv("DATABASE_NAME")
-# DATABASE_USER = os.getenv("DATABASE_USER")
-# DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
-# DATABASE_PORT = os.getenv("DATABASE_PORT")
-# DATABASE_HOST = os.getenv("DATABASE_HOST")
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv("DATABASE_NAME"),
-        'USER': os.getenv("DATABASE_USER"),
-        'PASSWORD': os.getenv("DATABASE_PASSWORD"),
-        'HOST': os.getenv("DATABASE_HOST"),   
-        'PORT': int(os.getenv("DATABASE_PORT")),
-    }
+    'default': dj_database_url.parse(os.getenv('DATABASE_URL'))
 }
 
 
@@ -134,27 +121,30 @@ USE_TZ = True
 
 # All settings common to all environments
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
+STATIC_URL = '/staticfiles/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# adding media root 
-MEDIA_URL = '/media/' 
+# adding media root
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# # Activate Django-Heroku.
-django_heroku.settings(locals())
-
-#set up s3
-AWS_DEFAULT_ACL = None
-AWS_S3_FILE_OVERWRITE = 'False'
-AWS_ACCESS_KEY_ID =  os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-DEFAULT_FILE_STORAGE = os.getenv('DEFAULT_FILE_STORAGE')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME')
-# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+# store file to s3
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            'bucket_name': os.getenv('AWS_STORAGE_BUCKET_NAME'),
+            'access_key': os.getenv('AWS_ACCESS_KEY_ID'),
+            'secret_key': os.getenv('AWS_SECRET_ACCESS_KEY'),
+            'file_overwrite': False,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}

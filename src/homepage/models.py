@@ -9,7 +9,10 @@ class Project(models.Model):
     link = models.TextField(default=None, blank=True, null=True)
     github_link = models.TextField(default=None, blank=True, null=True)
     image = models.ImageField(
-        upload_to="media/", height_field=None, width_field=None, max_length=None)
+        upload_to="media/",
+        height_field=None,
+        width_field=None,
+        max_length=None)
     type = models.CharField(max_length=64, blank=True)
 
     def toDict(self):

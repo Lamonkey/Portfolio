@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from .models import Project
-from json import dumps
 
 # Create your views here.
+
+
 def index(request):
     # getting raw label
     raw_labels = [x.type for x in Project.objects.all()]
@@ -16,19 +17,20 @@ def index(request):
     labels = [((" ").join(label.split("_"))).title() for label in labels]
     labels = set(labels)
     labels_pair = []
-    
+
     # convert label to (label,raw label)
     for label in labels:
         labels_pair.append((label, convert_label(label)))
-    # project_json = dumps([(project.toDict()) for project in Project.objects.all()])
     project_list = [project.toDict() for project in Project.objects.all()]
-    return render(request, "homepage/index.html",{
-        #send unique labels only
-        "labels":labels_pair,
-        "project_json":project_list,
+    return render(request, "homepage/index.html", {
+        # send unique labels only
+        "labels": labels_pair,
+        "project_json": project_list,
 
     })
-#convert label to raw label
+# convert label to raw label
+
+
 def convert_label(label):
     raw_label = label.lower()
     raw_label = raw_label.split(" ")
