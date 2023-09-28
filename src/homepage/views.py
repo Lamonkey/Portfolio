@@ -1,18 +1,19 @@
 from django.shortcuts import render
 from .models import Project
 
-# Create your views here.
-
 
 def index(request):
+
     # getting raw label
     raw_labels = [x.type for x in Project.objects.all()]
+    
     # split label based on space
     labels = []
     for label in raw_labels:
         tmp_labels = label.split(" ")
         for tmp_label in tmp_labels:
             labels.append(tmp_label)
+            
     # split title lable, remove _
     labels = [((" ").join(label.split("_"))).title() for label in labels]
     labels = set(labels)
