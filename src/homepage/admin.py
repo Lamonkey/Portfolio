@@ -6,3 +6,4 @@ from .models import Project
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ("title", "description", "type", "image", "link")
+    search_fields = ("title", )
