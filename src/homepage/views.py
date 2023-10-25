@@ -29,7 +29,8 @@ def index(request):
         "project_json": project_list,
 
     })
-# convert label to raw label
+
+
 
 
 def convert_label(label):
