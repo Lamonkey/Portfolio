@@ -32,10 +32,12 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv('MODE', 'production') == 'development'
 
 # Allowed hosts: simplest behavior per environment
+_env_allowed_hosts = [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h]
 if DEBUG:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-else:
-    ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h]
+    for _dev_host in ("localhost", "127.0.0.1"):
+        if _dev_host not in _env_allowed_hosts:
+            _env_allowed_hosts.append(_dev_host)
+ALLOWED_HOSTS = _env_allowed_hosts
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 # Application definition
 
