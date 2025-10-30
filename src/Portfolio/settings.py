@@ -30,7 +30,12 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('MODE', 'production') == 'development'
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+
+# Allowed hosts: simplest behavior per environment
+if DEBUG:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+else:
+    ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h]
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 # Application definition
 
