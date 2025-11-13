@@ -23,7 +23,7 @@
             {% if entry.image_url %}
             <img src="{{ entry.image_url }}" alt="{{ entry.title }} icon" />
             {% else %}
-            <span>{{ entry.title|slice:":1" }}</span>
+            <span class="thumb-fallback">{{ entry.title|slice:":1" }}</span>
             {% endif %}
           </div>
           <div class="detail-hero-text">
