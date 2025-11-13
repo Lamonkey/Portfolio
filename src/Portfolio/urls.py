@@ -18,13 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 
-try:
     urlpatterns = [
         path('', include("homepage.urls")),
         path('admin/', admin.site.urls),
     ]
-except Exception as e:
-    print(e)
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
