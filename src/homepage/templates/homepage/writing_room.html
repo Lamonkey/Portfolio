@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jesse Chen · Writing Room</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'homepage/writing-room.css' %}" />
+  </head>
+  <body class="writing-body">
+    <div class="gradient-bg"></div>
+    <div class="page-shell container-lg">
+      <header class="hero">
+        <p class="eyebrow">Jesse Chen · Writing, experiments, crypto-notes</p>
+        <h1>Where my essays, notes, and public key live together.</h1>
+        <p class="lead-text">
+          Long-form posts go to Medium, sketches stay here, and encrypted messages
+          always get a thoughtful reply. This page is the hub for the words I'm
+          publishing and the conversations I hope they start.
+        </p>
+        <div class="cta-group">
+          <a
+            class="btn btn-light btn-lg"
+            href="{{ featured_story.link }}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read on Medium ↗
+          </a>
+          <a class="btn btn-outline-light btn-lg" href="#crypto-club">
+            Share an encrypted note
+          </a>
+        </div>
+      </header>
+
+      <section class="panel featured" aria-labelledby="featured-writing">
+        <div class="panel__header">
+          <div>
+            <p class="eyebrow" id="featured-writing">Featured writing</p>
+            <h2>{{ featured_story.title }}</h2>
+          </div>
+          <span class="reading-time">{{ featured_story.reading_time }}</span>
+        </div>
+        <p class="panel__body">{{ featured_story.summary }}</p>
+        <a
+          class="panel__link"
+          href="{{ featured_story.link }}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open essay on Medium
+        </a>
+      </section>
+
+      <section class="panel stack" aria-labelledby="writing-collections">
+        <div class="panel__header">
+          <div>
+            <p class="eyebrow" id="writing-collections">Writing collections</p>
+            <h2>Streams I'm maintaining</h2>
+          </div>
+        </div>
+        <div class="row g-4">
+          {% for collection in writing_collections %}
+          <div class="col-12 col-md-4">
+            <article class="collection-card h-100">
+              <div class="collection-card__body">
+                <p class="collection-card__eyebrow">Series</p>
+                <h3>{{ collection.title }}</h3>
+                <p>{{ collection.summary }}</p>
+                <div class="topics">
+                  {% for topic in collection.topics %}
+                  <span class="topic-pill">{{ topic }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              <a
+                class="stretched-link"
+                href="{{ collection.link }}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Explore on Medium
+              </a>
+            </article>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="panel notebook" aria-labelledby="now-next-later">
+        <div class="panel__header">
+          <div>
+            <p class="eyebrow" id="now-next-later">Open notebook</p>
+            <h2>What I'm drafting</h2>
+          </div>
+        </div>
+        <div class="notebook-grid">
+          {% for entry in notebook_entries %}
+          <article class="notebook-card">
+            <span class="badge">{{ entry.label }}</span>
+            <h3>{{ entry.title }}</h3>
+            <p>{{ entry.detail }}</p>
+          </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section
+        class="panel crypto"
+        id="crypto-club"
+        aria-labelledby="crypto-section"
+      >
+        <div class="panel__header">
+          <div>
+            <p class="eyebrow" id="crypto-section">Encrypted mail club</p>
+            <h2>Yes, I publish my public key.</h2>
+          </div>
+        </div>
+        <div class="row g-4 align-items-stretch">
+          <div class="col-12 col-lg-5">
+            <pre class="public-key">{{ pgp_public_key }}</pre>
+            <p class="key-note">
+              Swap in your favorite key server or just copy-paste—replace this
+              sample key with the one you use today.
+            </p>
+          </div>
+          <div class="col-12 col-lg-7">
+            <div class="encryption-steps">
+              {% for step in encryption_steps %}
+              <article class="step">
+                <h3>{{ step.title }}</h3>
+                <p>{{ step.detail }}</p>
+              </article>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel outro" aria-labelledby="stay-in-touch">
+        <div class="panel__header">
+          <div>
+            <p class="eyebrow" id="stay-in-touch">Stay in touch</p>
+            <h2>Send a note, encrypted or not.</h2>
+          </div>
+        </div>
+        <div class="outro__content">
+          <p>
+            Medium responses, Twitter DMs, and email all work. If you ship an
+            encrypted message, mention the subject line so I can find it fast.
+          </p>
+          <div class="cta-group">
+            <a
+              class="btn btn-dark btn-lg"
+              href="mailto:88therisingsun@gmail.com"
+            >
+              Email me
+            </a>
+            <a
+              class="btn btn-outline-dark btn-lg"
+              href="https://github.com/Lamonkey"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub profile
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <footer class="page-footer">
+        <p>© Jesse Chen — Built with Django & Bootstrap.</p>
+        <a href="/">Back to classic portfolio</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ entry.title }} · Jesse Chen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'homepage/software-log.css' %}" />
+  </head>
+  <body class="software-detail-body">
+    <div class="page-shell detail-shell">
+      <a class="back-link" href="{% url 'homepage:software-log' %}">← Back to apps</a>
+      <article class="detail-card app-detail">
+        <div class="detail-hero">
+          <div class="detail-thumb">
+            {% if entry.image_url %}
+            <img src="{{ entry.image_url }}" alt="{{ entry.title }} icon" />
+            {% else %}
+            <span>{{ entry.title|slice:":1" }}</span>
+            {% endif %}
+          </div>
+          <div class="detail-hero-text">
+            <p class="card-meta">
+              {% if entry.tags %}
+                {{ entry.tags|join:' • ' }}
+              {% else %}
+                Independent build
+              {% endif %}
+            </p>
+            <h1>{{ entry.title }}</h1>
+            <p class="detail-summary">{{ entry.summary }}</p>
+            <div class="detail-links">
+              {% if entry.link %}
+              <a
+                class="btn primary"
+                href="{{ entry.link }}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Check it out
+              </a>
+              {% endif %}
+              {% if entry.github_link %}
+              <a
+                class="btn ghost"
+                href="{{ entry.github_link }}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View source
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-body">
+          {% if entry.description_html %}
+            {{ entry.description_html|safe }}
+          {% else %}
+          <p>Build notes are on the way. In the meantime, use the buttons above to explore the project.</p>
+          {% endif %}
+        </div>
+      </article>
+
+      <footer class="log-footer">
+        <p>More projects soon. Reach me anytime at <a href="mailto:88therisingsun@gmail.com">email</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>
