@@ -239,15 +239,18 @@ body.software-detail-body {
 }
 
 .detail-thumb {
-  width: 130px;
-  height: 130px;
-  border-radius: 34px;
+  width: var(--tile-icon-size);
+  height: var(--tile-icon-size);
+  min-width: var(--tile-icon-size);
+  min-height: var(--tile-icon-size);
+  flex-shrink: 0;
+  border-radius: 24px;
   background: #f1e3d5;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  font-size: 3rem;
+  font-size: 2.1rem;
   font-weight: 600;
   color: var(--accent);
 }
@@ -310,10 +313,6 @@ body.software-detail-body {
     align-items: flex-start;
   }
 
-  .detail-thumb {
-    width: 110px;
-    height: 110px;
-  }
 
   .page-shell {
     padding: 2rem 1rem 3rem;
