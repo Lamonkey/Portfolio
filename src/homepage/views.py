@@ -11,14 +11,14 @@ def index(request):
 
     # getting raw label
     raw_labels = [x.type for x in Project.objects.all()]
-    
+
     # split label based on space
     labels = []
     for label in raw_labels:
         tmp_labels = label.split(" ")
         for tmp_label in tmp_labels:
             labels.append(tmp_label)
-            
+
     # split title lable, remove _
     labels = [((" ").join(label.split("_"))).title() for label in labels]
     labels = set(labels)
@@ -34,8 +34,6 @@ def index(request):
         "project_json": project_list,
 
     })
-
-
 
 
 def convert_label(label):
@@ -132,8 +130,8 @@ def software_log(request):
     entries = _build_project_entries()
     return render(request, "homepage/software_log.html", {
         "entries": entries,
-        "page_title": "Software Log",
-        "page_description": "A running log of the software I ship, plus the notes that got me there.",
+        "page_title": "Projects",
+        "page_description": "Projects I've shipped, with build notes, links, and the tech stack that powered them."
     })
 
 
