@@ -1,10 +1,9 @@
-import markdown
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 
-from .models import Project
+from .models import PrivacyPolicy, Project, render_markdown
 
 
 def index(request):
@@ -146,13 +145,31 @@ def software_log_detail(request, slug):
     })
 
 
+def privacy_policy_detail(request, slug):
+    policy = get_object_or_404(
+        PrivacyPolicy.objects.prefetch_related("projects").filter(is_active=True),
+        slug=slug,
+    )
+    related_projects = []
+    for project in policy.projects.all().order_by("title"):
+        slug_base = slugify(project.title) or f"project-{project.pk}"
+        related_projects.append({
+            "title": project.title,
+            "slug": f"{slug_base}-{project.pk}",
+        })
+    return render(request, "homepage/privacy_policy_detail.html", {
+        "policy": policy,
+        "related_projects": related_projects,
+    })
+
+
 def _build_project_entries():
-    projects = Project.objects.all().order_by('-id')
+    projects = Project.objects.prefetch_related("privacy_policies").all().order_by('-id')
     entries = []
 
     for project in projects:
         raw_description = project.description or ""
-        html_description = markdown.markdown(raw_description)
+        html_description = render_markdown(raw_description)
         plain_description = strip_tags(html_description).strip()
         summary = plain_description[:220].rstrip()
         if plain_description and len(plain_description) > 220:
@@ -170,6 +187,10 @@ def _build_project_entries():
         except ValueError:
             image_url = None
 
+        linked_policies = [p for p in project.privacy_policies.all() if p.is_active]
+        linked_policies.sort(key=lambda p: p.updated_at, reverse=True)
+        primary_policy = linked_policies[0] if linked_policies else None
+
         entries.append({
             "id": project.id,
             "slug": slug_value,
@@ -180,6 +201,7 @@ def _build_project_entries():
             "link": project.link,
             "github_link": project.github_link,
             "image_url": image_url,
+            "privacy_policy_slug": primary_policy.slug if primary_policy else None,
         })
 
     return entries

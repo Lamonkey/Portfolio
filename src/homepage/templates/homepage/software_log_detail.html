@@ -57,6 +57,14 @@
                 View source
               </a>
               {% endif %}
+              {% if entry.privacy_policy_slug %}
+              <a
+                class="btn ghost"
+                href="{% url 'homepage:privacy-policy-detail' slug=entry.privacy_policy_slug %}"
+              >
+                Privacy policy
+              </a>
+              {% endif %}
             </div>
           </div>
         </div>
