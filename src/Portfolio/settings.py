@@ -38,7 +38,7 @@ if DEBUG:
         if _dev_host not in _env_allowed_hosts:
             _env_allowed_hosts.append(_dev_host)
 ALLOWED_HOSTS = _env_allowed_hosts
-CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
 # Application definition
 
 INSTALLED_APPS = [
