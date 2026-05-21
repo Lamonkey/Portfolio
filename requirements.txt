@@ -7,8 +7,8 @@ Django==5.2.7
 django-environ==0.12.0
 django-storages==1.14
 flake8==6.1.0
-gunicorn==21.2.0
 importlib-metadata==6.8.0
+mcp==1.27.1
 jmespath==1.0.1
 Markdown==3.4.4
 mccabe==0.7.0
@@ -31,6 +31,7 @@ sqlparse==0.4.4
 tomli==2.0.1
 typing_extensions==4.8.0
 urllib3==1.26.16
+uvicorn[standard]==0.47.0
 wheel==0.37.0
 whitenoise==6.5.0
 zipp==3.17.0

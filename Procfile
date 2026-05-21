@@ -1,1 +1,1 @@
-web: python -m gunicorn --chdir src wsgi --log-file -
+web: python -m uvicorn --app-dir src Portfolio.asgi:application --host 0.0.0.0 --port ${PORT:-8000}
