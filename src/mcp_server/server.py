@@ -65,6 +65,7 @@ def _project_to_dict(project, include_description: bool) -> dict:
     data = {
         "id": project.id,
         "title": project.title,
+        "subtitle": project.subtitle,
         "type": project.type,
         "link": project.link,
         "github_link": project.github_link,
@@ -72,6 +73,7 @@ def _project_to_dict(project, include_description: bool) -> dict:
     }
     if include_description:
         data["description"] = project.description
+        data["meta_description"] = project.meta_description
     return data
 
 
@@ -110,21 +112,34 @@ async def get_project(project_id: int) -> dict:
 @mcp.tool()
 async def create_project(
     title: str,
+    subtitle: str = "",
     type: str = "",
     link: Optional[str] = None,
     github_link: Optional[str] = None,
     description: Optional[str] = None,
+    meta_description: str = "",
 ) -> dict:
-    """Create a new portfolio project. Image upload is not supported via MCP; the project is created without an image."""
+    """Create a new portfolio project.
+
+    `subtitle` is a short one-liner shown on the list-page card.
+    `description` is the long-form story/markdown shown on the detail page.
+    `meta_description` is the SEO snippet (~120-160 chars) used in
+    <meta name="description"> and og:description; if blank it falls back
+    to subtitle then to a truncated description.
+
+    Image upload is not supported via MCP; the project is created without an image.
+    """
     from homepage.models import Project
 
     def _create():
         project = Project.objects.create(
             title=title,
+            subtitle=subtitle,
             type=type,
             link=link,
             github_link=github_link,
             description=description,
+            meta_description=meta_description,
         )
         return _project_to_dict(project, include_description=True)
 
@@ -135,12 +150,17 @@ async def create_project(
 async def update_project(
     project_id: int,
     title: Optional[str] = None,
+    subtitle: Optional[str] = None,
     type: Optional[str] = None,
     link: Optional[str] = None,
     github_link: Optional[str] = None,
     description: Optional[str] = None,
+    meta_description: Optional[str] = None,
 ) -> dict:
-    """Partial-update an existing project. Only fields explicitly passed (non-null) are written."""
+    """Partial-update an existing project. Only fields explicitly passed (non-null) are written.
+
+    To clear a field, pass an empty string explicitly (e.g. `subtitle=""`).
+    """
     from homepage.models import Project
 
     def _update():
@@ -150,6 +170,8 @@ async def update_project(
             return None
         if title is not None:
             project.title = title
+        if subtitle is not None:
+            project.subtitle = subtitle
         if type is not None:
             project.type = type
         if link is not None:
@@ -158,6 +180,8 @@ async def update_project(
             project.github_link = github_link
         if description is not None:
             project.description = description
+        if meta_description is not None:
+            project.meta_description = meta_description
         project.save()
         return _project_to_dict(project, include_description=True)
 

@@ -36,11 +36,18 @@ Defined in [`src/mcp_server/server.py`](../src/mcp_server/server.py) using the F
 
 | Tool | Args | Returns | Description |
 |---|---|---|---|
-| `list_projects` | none | `list[dict]` | Every `Project` row ordered newest-first. Summary fields only — `description` is omitted to keep responses small. |
-| `get_project` | `project_id: int` | `dict` | Full details for one project including the raw markdown `description`. Raises `ValueError` if no project has that id. |
-| `create_project` | `title: str`, optional `type`, `link`, `github_link`, `description` | `dict` | Creates a new project and returns its full details (including the assigned `id`). Image upload is **not** supported via MCP — the project is created without an image (`image_url` will be `null`). |
-| `update_project` | `project_id: int`, optional `title`, `type`, `link`, `github_link`, `description` | `dict` | Partial update — only fields explicitly passed (non-null) are written; everything else is left untouched. Raises `ValueError` if no project has that id. |
+| `list_projects` | none | `list[dict]` | Every `Project` row ordered newest-first. Summary fields (incl. `subtitle`) only — `description` and `meta_description` are omitted to keep responses small. |
+| `get_project` | `project_id: int` | `dict` | Full details for one project including the raw markdown `description` and `meta_description`. Raises `ValueError` if no project has that id. |
+| `create_project` | `title: str`, optional `subtitle`, `type`, `link`, `github_link`, `description`, `meta_description` | `dict` | Creates a new project and returns its full details (including the assigned `id`). Image upload is **not** supported via MCP — the project is created without an image (`image_url` will be `null`). |
+| `update_project` | `project_id: int`, optional `title`, `subtitle`, `type`, `link`, `github_link`, `description`, `meta_description` | `dict` | Partial update — only fields explicitly passed (non-null) are written; everything else is left untouched. To clear a field, pass an empty string. Raises `ValueError` if no project has that id. |
 | `delete_project` | `project_id: int` | `dict` | Deletes the project. Returns `{"deleted": true, "id": ..., "title": ...}` for confirmation. Raises `ValueError` if no project has that id. |
+
+### Field semantics
+
+- **`title`** — display name, max 64 chars.
+- **`subtitle`** — short one-liner shown on the list-page card (max 200 chars). If empty, the card falls back to a truncated `description`.
+- **`description`** — long-form markdown rendered on the detail page. The "story" of the project.
+- **`meta_description`** — SEO snippet (max 160 chars) used in `<meta name="description">`, `og:description`, and `twitter:description`. If empty, falls back to `subtitle`, then to a truncated `description`.
 
 All tools wrap synchronous ORM calls in `asgiref.sync.sync_to_async` so they don't block the event loop.
 
@@ -54,11 +61,13 @@ Adding an image to a project requires uploading a file, which doesn't fit the JS
 {
     "id": int,
     "title": str,
+    "subtitle": str,                # may be empty
     "type": str,
     "link": str | None,
     "github_link": str | None,
-    "image_url": str | None,   # signed S3 URL if AWS storage is configured, else local path
-    "description": str,        # only present from get_project
+    "image_url": str | None,        # signed S3 URL if AWS storage is configured, else local path
+    "description": str,             # only present from get_project / create_project / update_project
+    "meta_description": str,        # only present from get_project / create_project / update_project
 }
 ```
 
