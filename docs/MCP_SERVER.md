@@ -84,25 +84,31 @@ The middleware only enforces auth on `scope["type"] == "http"`. Non-HTTP scopes 
 
 ## Configuration
 
-Add one new environment variable to your `.env` and to the deployment environment:
+The server reads three environment variables:
+
+| Env var | Required | Purpose |
+|---|---|---|
+| `MCP_TOKEN` | yes | Bearer token clients must present. Returns 503 if missing, 401 if wrong. |
+| `MCP_ALLOWED_HOSTS` | yes in production | Comma-separated `Host` header values to allow past FastMCP's DNS-rebinding protection. Local dev works without this (FastMCP defaults to allowing localhost). In production you **must** set this or every request will get a 421 "Invalid Host header". |
+| `MCP_ALLOWED_ORIGINS` | only for browser clients | Comma-separated `Origin` header values for browser-based MCP clients (e.g. the Inspector running on a non-localhost URL). Non-browser clients like Claude Desktop don't send Origin and don't need this. |
+
+Example `.env` for local development:
 
 ```bash
-# A long random string. Rotate by re-generating and updating both the
-# server and every connected MCP client.
-MCP_TOKEN=replace-with-a-long-random-string
+MCP_TOKEN=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+# MCP_ALLOWED_HOSTS is optional locally — FastMCP allows localhost by default
 ```
 
-Suggested generation:
+Production (Heroku):
 
 ```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
+heroku config:set MCP_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')" -a lamonkey-portfolio
+heroku config:set MCP_ALLOWED_HOSTS="lamonkey-portfolio.herokuapp.com,jchen42.com" -a lamonkey-portfolio
 ```
 
-> **Heroku note:** at the time of writing, `MCP_TOKEN` is **not** set on the `lamonkey-portfolio` Heroku app. Until it is, requests to `https://lamonkey-portfolio.herokuapp.com/mcp` will return `503`. Set it with:
->
-> ```bash
-> heroku config:set MCP_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')" -a lamonkey-portfolio
-> ```
+### Why `MCP_ALLOWED_HOSTS` is needed
+
+FastMCP's `streamable_http_app()` ships with DNS rebinding protection turned on. When `transport_security=None` (the convenient default), it auto-populates the allowlist with `["127.0.0.1:*", "localhost:*", "[::1]:*"]` — perfect for local dev, but it rejects every other Host header with 421. The server code in [`mcp_server/server.py`](../src/mcp_server/server.py) extends that allowlist with whatever you put in `MCP_ALLOWED_HOSTS`.
 
 ## Local testing
 

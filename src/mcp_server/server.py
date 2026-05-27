@@ -2,12 +2,56 @@
 
 Mounted under /mcp by Portfolio.asgi via Starlette routing.
 """
+import os
 from typing import Optional
 
 from asgiref.sync import sync_to_async
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
-mcp = FastMCP("portfolio", stateless_http=True)
+
+def _build_transport_security() -> TransportSecuritySettings | None:
+    """Build DNS-rebinding-protection settings from env vars.
+
+    FastMCP auto-enables DNS rebinding protection with a localhost-only
+    allowlist when ``transport_security`` is ``None``. That works in
+    local development but rejects every request in production with a
+    421 "Invalid Host header" response. Override by supplying:
+
+    - ``MCP_ALLOWED_HOSTS``: comma-separated host header values to allow
+      (e.g. ``example.com,api.example.com``). Wildcard ports via ``:*``.
+    - ``MCP_ALLOWED_ORIGINS``: comma-separated Origin header values for
+      browser-based clients (e.g. ``https://example.com``).
+
+    When neither env var is set, ``None`` is returned so FastMCP falls
+    back to its built-in localhost defaults.
+    """
+    extra_hosts = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
+    extra_origins = [o.strip() for o in os.getenv("MCP_ALLOWED_ORIGINS", "").split(",") if o.strip()]
+    if not extra_hosts and not extra_origins:
+        return None
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=[
+            "127.0.0.1:*",
+            "localhost:*",
+            "[::1]:*",
+            *extra_hosts,
+        ],
+        allowed_origins=[
+            "http://127.0.0.1:*",
+            "http://localhost:*",
+            "http://[::1]:*",
+            *extra_origins,
+        ],
+    )
+
+
+mcp = FastMCP(
+    "portfolio",
+    stateless_http=True,
+    transport_security=_build_transport_security(),
+)
 
 
 def _project_to_dict(project, include_description: bool) -> dict:
