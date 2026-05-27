@@ -71,7 +71,7 @@
             >
               {{ entry.title }}
             </a>
-            <p class="tile-summary">{{ entry.summary }}</p>
+            <p class="tile-summary">{{ entry.subtitle|default:entry.summary }}</p>
           </div>
         </article>
         {% empty %}

@@ -5,8 +5,18 @@ from .models import PrivacyPolicy, Project
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("title", "description", "type", "image", "link")
-    search_fields = ("title", )
+    list_display = ("title", "subtitle", "type", "image", "link")
+    search_fields = ("title", "subtitle", "meta_description")
+    fields = (
+        "title",
+        "subtitle",
+        "description",
+        "meta_description",
+        "type",
+        "link",
+        "github_link",
+        "image",
+    )
 
 
 @admin.register(PrivacyPolicy)

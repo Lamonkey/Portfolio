@@ -191,11 +191,20 @@ def _build_project_entries():
         linked_policies.sort(key=lambda p: p.updated_at, reverse=True)
         primary_policy = linked_policies[0] if linked_policies else None
 
+        # SEO meta description: explicit override -> subtitle -> truncated summary.
+        meta_description = (
+            (project.meta_description or "").strip()
+            or (project.subtitle or "").strip()
+            or summary
+        )
+
         entries.append({
             "id": project.id,
             "slug": slug_value,
             "title": project.title,
+            "subtitle": (project.subtitle or "").strip(),
             "summary": summary,
+            "meta_description": meta_description,
             "description_html": html_description,
             "tags": tags,
             "link": project.link,

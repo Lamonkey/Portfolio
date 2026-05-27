@@ -19,7 +19,22 @@ def render_markdown(raw_text):
 
 class Project(models.Model):
     title = models.CharField(max_length=64)
+    subtitle = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Short one-liner describing what this project is. Shown on the list page card.",
+    )
     description = models.TextField(default=None, blank=True, null=True)
+    meta_description = models.CharField(
+        max_length=160,
+        blank=True,
+        default="",
+        help_text=(
+            "SEO meta description used in <meta name=\"description\"> and og:description. "
+            "Aim for 120-160 chars. Falls back to subtitle, then to a truncated description."
+        ),
+    )
     link = models.TextField(default=None, blank=True, null=True)
     github_link = models.TextField(default=None, blank=True, null=True)
     image = models.ImageField(
