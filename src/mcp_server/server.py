@@ -6,8 +6,10 @@ import os
 from typing import Optional
 
 from asgiref.sync import sync_to_async
+from mcp.server.auth.settings import AuthSettings
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
+from pydantic import AnyHttpUrl
 
 
 def _build_transport_security() -> TransportSecuritySettings | None:
@@ -47,10 +49,38 @@ def _build_transport_security() -> TransportSecuritySettings | None:
     )
 
 
+def _build_auth() -> tuple[object | None, AuthSettings | None]:
+    """Optionally enable OAuth 2.0 on the MCP endpoint.
+
+    ``MCP_OAUTH_ISSUER_URL`` is the toggle: when set, FastMCP wires up
+    ``/authorize``, ``/token``, and the well-known metadata endpoints, and
+    every ``/mcp`` request is validated via ``DjangoOAuthProvider.load_access_token``.
+    When unset, the server falls back to the legacy ``BearerAuthMiddleware``
+    + ``MCP_TOKEN`` flow (kept for local dev convenience).
+    """
+    issuer = os.getenv("MCP_OAUTH_ISSUER_URL")
+    if not issuer:
+        return None, None
+
+    # Imports kept lazy so the module can be imported without Django set up
+    # (e.g. by sphinx, ad-hoc scripts).
+    from mcp_oauth.provider import DjangoOAuthProvider
+
+    resource = os.getenv("MCP_OAUTH_RESOURCE_URL", issuer)
+    return DjangoOAuthProvider(), AuthSettings(
+        issuer_url=AnyHttpUrl(issuer),
+        resource_server_url=AnyHttpUrl(resource),
+    )
+
+
+_provider, _auth_settings = _build_auth()
+
 mcp = FastMCP(
     "portfolio",
     stateless_http=True,
     transport_security=_build_transport_security(),
+    auth_server_provider=_provider,
+    auth=_auth_settings,
 )
 
 

@@ -93,13 +93,15 @@ The middleware only enforces auth on `scope["type"] == "http"`. Non-HTTP scopes 
 
 ## Configuration
 
-The server reads three environment variables:
+The server reads these environment variables:
 
 | Env var | Required | Purpose |
 |---|---|---|
-| `MCP_TOKEN` | yes | Bearer token clients must present. Returns 503 if missing, 401 if wrong. |
+| `MCP_TOKEN` | yes | Legacy bearer token. Required for the curl/Inspector flow. Also accepted by the OAuth-mode server as a fallback (see Authentication modes below). |
 | `MCP_ALLOWED_HOSTS` | yes in production | Comma-separated `Host` header values to allow past FastMCP's DNS-rebinding protection. Local dev works without this (FastMCP defaults to allowing localhost). In production you **must** set this or every request will get a 421 "Invalid Host header". |
 | `MCP_ALLOWED_ORIGINS` | only for browser clients | Comma-separated `Origin` header values for browser-based MCP clients (e.g. the Inspector running on a non-localhost URL). Non-browser clients like Claude Desktop don't send Origin and don't need this. |
+| `MCP_OAUTH_ISSUER_URL` | yes for OAuth mode | When set, turns on OAuth 2.0. Value is the public base URL of this server (e.g. `https://lamonkey-portfolio.herokuapp.com`). FastMCP uses it to populate the `issuer` field in `/.well-known/oauth-authorization-server` and to auto-mount the `/authorize`, `/token`, and well-known metadata endpoints. |
+| `MCP_OAUTH_RESOURCE_URL` | optional | Defaults to `MCP_OAUTH_ISSUER_URL`. Override if the resource server URL differs from the issuer URL. |
 
 Example `.env` for local development:
 
@@ -114,6 +116,58 @@ Production (Heroku):
 heroku config:set MCP_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')" -a lamonkey-portfolio
 heroku config:set MCP_ALLOWED_HOSTS="lamonkey-portfolio.herokuapp.com,jchen42.com" -a lamonkey-portfolio
 ```
+
+## Authentication modes
+
+The server runs in one of two modes depending on whether `MCP_OAUTH_ISSUER_URL` is set:
+
+### Legacy mode (default — `MCP_OAUTH_ISSUER_URL` unset)
+
+Routes mounted: `/mcp` only. `BearerAuthMiddleware` enforces `Authorization: Bearer <MCP_TOKEN>`.
+
+This is the simplest mode and is what the curl examples below assume.
+
+### OAuth mode (`MCP_OAUTH_ISSUER_URL` set)
+
+Routes mounted by FastMCP:
+
+- `/mcp` — same JSON-RPC endpoint, now validated against OAuth-issued access tokens by the SDK's own token middleware.
+- `/authorize` — OAuth authorization endpoint. Wrapped in [`DjangoAdminGateMiddleware`](../src/mcp_oauth/middleware.py) so only a logged-in Django **superuser** can complete the grant. Anyone else is 302'd to `/admin/login/?next=…`.
+- `/token` — OAuth token endpoint. Exchanges an authorization code + PKCE verifier + client_secret for an access token.
+- `/.well-known/oauth-authorization-server` — RFC 8414 authorization server metadata.
+- `/.well-known/oauth-protected-resource` — RFC 9728 protected resource metadata.
+
+The legacy `MCP_TOKEN` keeps working — `DjangoOAuthProvider.load_access_token` falls back to comparing the incoming bearer against `os.getenv("MCP_TOKEN")`, returning a synthetic non-expiring `AccessToken`. This is deliberate: it lets curl scripts, the MCP Inspector, and the `/admin/` smoke tests keep working unchanged during the OAuth rollout.
+
+#### Registering an OAuth client
+
+OAuth client credentials are issued by a management command (no DCR):
+
+```bash
+heroku run -a lamonkey-portfolio "python src/manage.py register_oauth_client \
+  --name 'Claude.ai' \
+  --redirect-uri 'https://claude.ai/api/mcp/auth/callback'"
+```
+
+It prints `client_id` and `client_secret` once; both go into the connector form in claude.ai's Settings → Connectors → Add custom connector. The plaintext secret is stored in the `mcp_oauth_oauthclient` table (same threat model as `MCP_TOKEN` in Heroku config).
+
+#### How the OAuth dance plays out
+
+1. claude.ai redirects the operator's browser to `https://.../authorize?…`.
+2. `DjangoAdminGateMiddleware` reads the Django `sessionid` cookie; if it doesn't resolve to an `is_superuser` user, it 302's to `/admin/login/?next=/authorize?…`.
+3. Operator logs in to Django admin with their existing superuser credentials.
+4. Browser bounces back to `/authorize?…`. This time the session cookie is present; the middleware passes through.
+5. `DjangoOAuthProvider.authorize` mints a single-use authorization code, stores it in `OAuthAuthCode`, and returns the URL `https://claude.ai/api/mcp/auth/callback?code=<code>&state=<state>`. SDK redirects the browser there.
+6. claude.ai's backend POSTs to `/token` with `grant_type=authorization_code`, the code, the client credentials, and the PKCE `code_verifier`. SDK verifies the secret + PKCE, calls `exchange_authorization_code`, returns `{"access_token": "...", "token_type": "Bearer", "expires_in": 604800}`.
+7. claude.ai stores the access token. Every subsequent `/mcp` request is `Authorization: Bearer <access_token>`; the SDK validates it via `load_access_token`, which looks it up in `OAuthAccessToken`.
+
+Tokens default to a 7-day TTL. There are no refresh tokens in v1; claude.ai re-runs the dance when the token expires.
+
+#### Known limitations (v1)
+
+- **Auto-approve consent** — the admin gate ensures only the operator can reach `/authorize`, but once they have, the SDK's auto-issued code is returned with no per-grant "Approve [client_name]?" prompt. Acceptable here because there's a single operator and clients are pre-registered. Adding an HTML consent step would be a follow-up.
+- **No refresh tokens** — clients re-run the full dance every 7 days. Adding refresh is a small extension of the provider.
+- **No Dynamic Client Registration** — clients must be added via `register_oauth_client`. The endpoint isn't even mounted.
 
 ### Why `MCP_ALLOWED_HOSTS` is needed
 

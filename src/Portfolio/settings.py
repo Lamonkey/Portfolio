@@ -43,6 +43,7 @@ CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split("
 
 INSTALLED_APPS = [
     'homepage.apps.HomepageConfig',
+    'mcp_oauth.apps.McpOauthConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
