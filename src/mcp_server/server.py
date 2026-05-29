@@ -241,4 +241,154 @@ async def delete_project(project_id: int) -> dict:
     return {"deleted": True, **result}
 
 
+# -----------------------------------------------------------------------------
+# Blog posts (jchen42.com/blog/)
+# -----------------------------------------------------------------------------
+
+
+def _post_to_dict(post, include_body: bool) -> dict:
+    data = {
+        "id": post.id,
+        "title": post.title,
+        "slug": post.slug,
+        "subtitle": post.subtitle,
+        "published": post.published,
+        "published_at": post.published_at.isoformat() if post.published_at else None,
+    }
+    if include_body:
+        data["content_markdown"] = post.content_markdown
+        data["meta_description"] = post.meta_description
+    return data
+
+
+@mcp.tool()
+async def list_posts(include_unpublished: bool = False) -> list[dict]:
+    """List blog posts, newest-first.
+
+    Returns summary fields only — the markdown body is omitted to keep responses small.
+    Set ``include_unpublished=True`` to also surface drafts.
+    """
+    from homepage.models import BlogPost
+
+    def _fetch():
+        qs = BlogPost.objects.all()
+        if not include_unpublished:
+            qs = qs.filter(published=True)
+        return [_post_to_dict(p, include_body=False) for p in qs]
+
+    return await sync_to_async(_fetch)()
+
+
+@mcp.tool()
+async def get_post(slug: str) -> dict:
+    """Get full details for one blog post by slug, including the markdown body."""
+    from homepage.models import BlogPost
+
+    def _fetch():
+        try:
+            return BlogPost.objects.get(slug=slug)
+        except BlogPost.DoesNotExist:
+            return None
+
+    post = await sync_to_async(_fetch)()
+    if post is None:
+        raise ValueError(f"Blog post {slug!r} not found")
+    return _post_to_dict(post, include_body=True)
+
+
+@mcp.tool()
+async def create_post(
+    title: str,
+    content_markdown: str,
+    subtitle: str = "",
+    meta_description: str = "",
+    slug: str = "",
+    published: bool = True,
+) -> dict:
+    """Create a new blog post.
+
+    Leave ``slug`` blank to auto-generate from the title. Posts default to
+    ``published=True`` (the casual / "post whatever" flow); set ``published=False``
+    to save a draft. ``published_at`` is auto-set to now when a post is first
+    published.
+    """
+    from homepage.models import BlogPost
+
+    def _create():
+        post = BlogPost(
+            title=title,
+            content_markdown=content_markdown,
+            subtitle=subtitle,
+            meta_description=meta_description,
+            slug=slug,
+            published=published,
+        )
+        post.save()  # save() auto-generates slug + published_at when needed
+        return _post_to_dict(post, include_body=True)
+
+    return await sync_to_async(_create)()
+
+
+@mcp.tool()
+async def update_post(
+    slug: str,
+    title: Optional[str] = None,
+    new_slug: Optional[str] = None,
+    subtitle: Optional[str] = None,
+    content_markdown: Optional[str] = None,
+    meta_description: Optional[str] = None,
+    published: Optional[bool] = None,
+) -> dict:
+    """Partial-update an existing post. Only fields explicitly passed (non-null) are written.
+
+    To rename the URL slug, pass ``new_slug``. To clear a field, pass an empty string.
+    """
+    from homepage.models import BlogPost
+
+    def _update():
+        try:
+            post = BlogPost.objects.get(slug=slug)
+        except BlogPost.DoesNotExist:
+            return None
+        if title is not None:
+            post.title = title
+        if new_slug is not None:
+            post.slug = new_slug
+        if subtitle is not None:
+            post.subtitle = subtitle
+        if content_markdown is not None:
+            post.content_markdown = content_markdown
+        if meta_description is not None:
+            post.meta_description = meta_description
+        if published is not None:
+            post.published = published
+        post.save()
+        return _post_to_dict(post, include_body=True)
+
+    result = await sync_to_async(_update)()
+    if result is None:
+        raise ValueError(f"Blog post {slug!r} not found")
+    return result
+
+
+@mcp.tool()
+async def delete_post(slug: str) -> dict:
+    """Delete a blog post by slug. Returns the deleted post's slug and title for confirmation."""
+    from homepage.models import BlogPost
+
+    def _delete():
+        try:
+            post = BlogPost.objects.get(slug=slug)
+        except BlogPost.DoesNotExist:
+            return None
+        snapshot = {"slug": post.slug, "title": post.title}
+        post.delete()
+        return snapshot
+
+    result = await sync_to_async(_delete)()
+    if result is None:
+        raise ValueError(f"Blog post {slug!r} not found")
+    return {"deleted": True, **result}
+
+
 mcp_app = mcp.streamable_http_app()

@@ -1,6 +1,26 @@
 from django.contrib import admin
 
-from .models import PrivacyPolicy, Project
+from .models import BlogPost, PrivacyPolicy, Project
+
+
+@admin.register(BlogPost)
+class BlogPostAdmin(admin.ModelAdmin):
+    list_display = ("title", "slug", "published", "published_at", "updated_at")
+    list_filter = ("published",)
+    search_fields = ("title", "subtitle", "content_markdown", "meta_description")
+    prepopulated_fields = {"slug": ("title",)}
+    readonly_fields = ("created_at", "updated_at")
+    fields = (
+        "title",
+        "slug",
+        "subtitle",
+        "content_markdown",
+        "meta_description",
+        "published",
+        "published_at",
+        "created_at",
+        "updated_at",
+    )
 
 
 @admin.register(Project)

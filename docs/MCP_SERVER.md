@@ -41,6 +41,11 @@ Defined in [`src/mcp_server/server.py`](../src/mcp_server/server.py) using the F
 | `create_project` | `title: str`, optional `subtitle`, `type`, `link`, `github_link`, `description`, `meta_description` | `dict` | Creates a new project and returns its full details (including the assigned `id`). Image upload is **not** supported via MCP — the project is created without an image (`image_url` will be `null`). |
 | `update_project` | `project_id: int`, optional `title`, `subtitle`, `type`, `link`, `github_link`, `description`, `meta_description` | `dict` | Partial update — only fields explicitly passed (non-null) are written; everything else is left untouched. To clear a field, pass an empty string. Raises `ValueError` if no project has that id. |
 | `delete_project` | `project_id: int` | `dict` | Deletes the project. Returns `{"deleted": true, "id": ..., "title": ...}` for confirmation. Raises `ValueError` if no project has that id. |
+| `list_posts` | optional `include_unpublished: bool` | `list[dict]` | List blog posts, newest-first. Returns summary fields only — `content_markdown` and `meta_description` are omitted. Drafts (`published=False`) are hidden unless `include_unpublished=true`. |
+| `get_post` | `slug: str` | `dict` | Full details for one blog post including the markdown body. Raises `ValueError` if no post has that slug. |
+| `create_post` | `title: str`, `content_markdown: str`, optional `subtitle`, `meta_description`, `slug`, `published` | `dict` | Creates a new blog post. Slug auto-generates from the title when blank. Defaults to `published=True`; `published_at` is auto-set to now on first publish. |
+| `update_post` | `slug: str`, optional `title`, `new_slug`, `subtitle`, `content_markdown`, `meta_description`, `published` | `dict` | Partial update — only fields explicitly passed (non-null) are written. To change the URL slug, pass `new_slug`. |
+| `delete_post` | `slug: str` | `dict` | Deletes the post. Returns `{"deleted": true, "slug": ..., "title": ...}`. Raises `ValueError` if no post has that slug. |
 
 ### Field semantics
 

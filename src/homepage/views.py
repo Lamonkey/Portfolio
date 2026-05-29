@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 
-from .models import PrivacyPolicy, Project, render_markdown
+from .models import BlogPost, PrivacyPolicy, Project, render_markdown
 
 
 def index(request):
@@ -214,3 +214,60 @@ def _build_project_entries():
         })
 
     return entries
+
+
+def _build_blog_summary(post: BlogPost) -> str:
+    plain = strip_tags(render_markdown(post.content_markdown or "")).strip()
+    summary = plain[:220].rstrip()
+    if plain and len(plain) > 220:
+        summary = f"{summary}…"
+    return summary or "(no body yet)"
+
+
+def blog_list(request):
+    posts_qs = BlogPost.objects.filter(published=True)
+    entries = []
+    for post in posts_qs:
+        subtitle = (post.subtitle or "").strip()
+        summary = _build_blog_summary(post)
+        meta_description = (
+            (post.meta_description or "").strip()
+            or subtitle
+            or summary
+        )
+        entries.append({
+            "slug": post.slug,
+            "title": post.title,
+            "subtitle": subtitle,
+            "summary": summary,
+            "meta_description": meta_description,
+            "published_at": post.published_at,
+        })
+    return render(request, "homepage/blog_list.html", {
+        "entries": entries,
+        "page_title": "Blog",
+        "page_description": "Quick notes, weeknotes, and unpolished writing. Longer-form essays live on Medium.",
+    })
+
+
+def blog_detail(request, slug):
+    post = get_object_or_404(BlogPost, slug=slug, published=True)
+    subtitle = (post.subtitle or "").strip()
+    summary = _build_blog_summary(post)
+    meta_description = (
+        (post.meta_description or "").strip()
+        or subtitle
+        or summary
+    )
+    entry = {
+        "slug": post.slug,
+        "title": post.title,
+        "subtitle": subtitle,
+        "summary": summary,
+        "meta_description": meta_description,
+        "content_html": render_markdown(post.content_markdown or ""),
+        "published_at": post.published_at,
+    }
+    return render(request, "homepage/blog_detail.html", {
+        "entry": entry,
+    })
