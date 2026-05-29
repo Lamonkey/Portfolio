@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ page_title }} · Jesse Chen</title>
+    <meta name="description" content="{{ page_description }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ page_title }} · Jesse Chen" />
+    <meta property="og:description" content="{{ page_description }}" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="{{ page_title }} · Jesse Chen" />
+    <meta name="twitter:description" content="{{ page_description }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'homepage/software-log.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'homepage/favicon.ico' %}" />
+  </head>
+  <body class="software-log-body">
+    <div class="page-shell">
+      <header class="log-hero">
+        <p class="eyebrow">Jesse Chen · Blog</p>
+        <h1>{{ page_title }}</h1>
+        <p class="lead">
+          {{ page_description }}
+        </p>
+      </header>
+
+      <main class="app-shelf">
+        {% for entry in entries %}
+        <article class="app-tile">
+          <div class="tile-main">
+            <a
+              class="tile-title"
+              href="{% url 'homepage:blog-detail' slug=entry.slug %}"
+            >
+              {{ entry.title }}
+            </a>
+            <p class="tile-summary">{{ entry.subtitle|default:entry.summary }}</p>
+            {% if entry.published_at %}
+            <p class="card-meta">
+              <time datetime="{{ entry.published_at|date:'c' }}">
+                {{ entry.published_at|date:"F j, Y" }}
+              </time>
+            </p>
+            {% endif %}
+          </div>
+        </article>
+        {% empty %}
+        <p>No posts yet — check back soon.</p>
+        {% endfor %}
+      </main>
+
+      <footer class="log-footer">
+        <p>
+          Made by Jesse Chen · For longer-form essays see
+          <a href="https://medium.com/@jchen42" target="_blank" rel="noopener noreferrer">Medium</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

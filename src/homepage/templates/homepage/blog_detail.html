@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ entry.title }} · Jesse Chen</title>
+    <meta name="description" content="{{ entry.meta_description }}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="{{ entry.title }} · Jesse Chen" />
+    <meta property="og:description" content="{{ entry.meta_description }}" />
+    {% if entry.published_at %}
+    <meta property="article:published_time" content="{{ entry.published_at|date:'c' }}" />
+    {% endif %}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="{{ entry.title }} · Jesse Chen" />
+    <meta name="twitter:description" content="{{ entry.meta_description }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'homepage/software-log.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'homepage/favicon.ico' %}" />
+  </head>
+  <body class="software-detail-body">
+    <div class="page-shell detail-shell">
+      <a class="back-link" href="{% url 'homepage:blog-list' %}">← Back to blog</a>
+      <article class="detail-card app-detail">
+        <header class="detail-hero">
+          <div class="detail-hero-text">
+            <p class="card-meta">
+              {% if entry.published_at %}
+              <time datetime="{{ entry.published_at|date:'c' }}">
+                {{ entry.published_at|date:"F j, Y" }}
+              </time>
+              {% endif %}
+            </p>
+            <h1>{{ entry.title }}</h1>
+            {% if entry.subtitle %}
+            <p class="detail-summary">{{ entry.subtitle }}</p>
+            {% endif %}
+          </div>
+        </header>
+
+        <section class="detail-body">
+          {% if entry.content_html %}
+          {{ entry.content_html|safe }}
+          {% else %}
+          <p><em>Body not written yet.</em></p>
+          {% endif %}
+        </section>
+      </article>
+    </div>
+  </body>
+</html>
