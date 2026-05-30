@@ -80,7 +80,12 @@
       </main>
 
       <footer class="log-footer">
-        <p>Made by Jesse Chen · Powered by Django templates.</p>
+        <p>
+          Made by Jesse Chen · Read the
+          <a href="{% url 'homepage:blog-list' %}">blog</a>
+          or follow longer essays on
+          <a href="https://medium.com/@jchen42" target="_blank" rel="noopener noreferrer">Medium</a>.
+        </p>
       </footer>
     </div>
   </body>
