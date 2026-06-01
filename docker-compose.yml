@@ -35,7 +35,7 @@ services:
       - DATABASE_URL=postgresql://portfolio_user:portfolio_password@db:5432/portfolio_db
       - MODE=development
       - DEBUG=True
-      - SECRET_KEY=${SECRET_KEY:-django-insecure-test-key-change-in-production}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
     depends_on:
       db:
