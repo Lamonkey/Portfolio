@@ -1,6 +1,49 @@
 from django.contrib import admin
 
-from .models import BlogPost, PrivacyPolicy, Project
+from .models import BlogPost, FeaturedItem, LandingPage, PrivacyPolicy, Project
+
+
+@admin.register(LandingPage)
+class LandingPageAdmin(admin.ModelAdmin):
+    list_display = ("name", "headline", "updated_at")
+    readonly_fields = ("updated_at",)
+    fields = (
+        "name",
+        "headline",
+        "intro_markdown",
+        "photo",
+        "project_section_title",
+        "post_section_title",
+        "updated_at",
+    )
+
+    def has_add_permission(self, request):
+        # Singleton: only allow one landing page row.
+        return not LandingPage.objects.exists()
+
+
+@admin.register(FeaturedItem)
+class FeaturedItemAdmin(admin.ModelAdmin):
+    """The 'featured' table that drives the landing page.
+
+    Reads like a spreadsheet: edit order / on-off inline, one row per
+    spotlighted project or post.
+    """
+
+    list_display = ("order", "kind", "target", "is_active", "note")
+    list_display_links = ("target",)
+    list_editable = ("order", "is_active")
+    list_filter = ("is_active",)
+    autocomplete_fields = ("project", "post")
+    fields = ("order", "is_active", "project", "post", "note")
+
+    @admin.display(description="Type")
+    def kind(self, obj):
+        return "Project" if obj.is_project else "Post"
+
+    @admin.display(description="Featured")
+    def target(self, obj):
+        return obj.project or obj.post or "(empty)"
 
 
 @admin.register(BlogPost)
