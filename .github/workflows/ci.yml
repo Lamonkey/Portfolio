@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # dummy values so settings.py imports cleanly; never used to serve traffic
+      SECRET_KEY: ci-not-a-real-secret
+      DATABASE_URL: sqlite:///db.sqlite3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify dependency resolution
+        run: pip check
+
+      - name: Django system checks
+        run: python src/manage.py check
+
+      - name: Detect missing migrations
+        run: python src/manage.py makemigrations --check --dry-run
+
+      - name: Run test suite
+        run: python src/manage.py test

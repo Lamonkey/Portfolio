@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      # bump the boto3 family together — botocore caps urllib3, so they must move in lockstep
+      aws:
+        patterns: ["boto3", "botocore", "s3transfer"]
+      # dev-only tooling: low risk, batch into one PR to cut noise
+      dev-tools:
+        patterns: ["flake8", "mypy*", "pycodestyle", "pyflakes", "mccabe"]
+    # stay on the Django 5.2 LTS line; 6.x is a manual migration, not a pin bump
+    ignore:
+      - dependency-name: "Django"
+        update-types: ["version-update:semver-major"]
+
+  # keep the GitHub Actions workflow below up to date too
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
