@@ -130,6 +130,119 @@ class BlogPost(models.Model):
         return self.title
 
 
+class LandingPage(models.Model):
+    """Editable content for the site's landing page (jchen42.com/).
+
+    Treated as a singleton — edit the single row in admin to curate the
+    intro, photo, and the featured project / post shown on the home page.
+    """
+
+    name = models.CharField(max_length=120, default="Jesse Chen")
+    headline = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Short tagline shown under the name, e.g. 'Software engineer building in public'.",
+    )
+    intro_markdown = models.TextField(
+        blank=True,
+        default="",
+        help_text="A short bio / introduction, written in Markdown.",
+    )
+    photo = models.ImageField(
+        upload_to="media/landing/",
+        blank=True,
+        null=True,
+        help_text="A photo of you. Upload here; shown in the landing hero.",
+    )
+
+    # Section headings on the landing page. What appears under each section is
+    # controlled by the FeaturedItem table below, not by fields here.
+    project_section_title = models.CharField(
+        max_length=80,
+        default="Currently building",
+        help_text="Heading above the featured projects.",
+    )
+    post_section_title = models.CharField(
+        max_length=80,
+        default="Latest writing",
+        help_text="Heading above the featured writing.",
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Landing page"
+        verbose_name_plural = "Landing page"
+
+    @property
+    def intro_html(self) -> str:
+        return render_markdown(self.intro_markdown)
+
+    def __str__(self) -> str:
+        return f"Landing page ({self.name})"
+
+
+class FeaturedItem(models.Model):
+    """A single row on the landing page's "featured" table.
+
+    Each row spotlights EITHER a project OR a blog post. The set of active
+    rows — and their order — is what the landing page renders. Add, reorder,
+    or toggle rows in admin like a little newspaper layout table.
+    """
+
+    project = models.ForeignKey(
+        "Project",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="+",
+        help_text="Feature a project. Leave blank if this row features a post.",
+    )
+    post = models.ForeignKey(
+        "BlogPost",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="+",
+        help_text="Feature a blog post. Leave blank if this row features a project.",
+    )
+    note = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Optional blurb shown instead of the item's own subtitle/summary.",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text="Lower numbers show first.",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Uncheck to hide this row without deleting it.",
+    )
+
+    class Meta:
+        ordering = ["order", "id"]
+        verbose_name = "Featured item"
+        verbose_name_plural = "Featured items"
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if bool(self.project_id) == bool(self.post_id):
+            raise ValidationError("Choose exactly one: a project OR a post (not both, not neither).")
+
+    @property
+    def is_project(self) -> bool:
+        return self.project_id is not None
+
+    def __str__(self) -> str:
+        target = self.project or self.post
+        kind = "Project" if self.is_project else "Post"
+        return f"#{self.order} · {kind}: {target}" if target else f"#{self.order} · (empty)"
+
+
 class PrivacyPolicy(models.Model):
     title = models.CharField(max_length=120, default="Privacy Policy")
     slug = models.SlugField(unique=True)

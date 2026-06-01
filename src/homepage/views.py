@@ -3,7 +3,55 @@ from django.shortcuts import get_object_or_404, render
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 
-from .models import BlogPost, PrivacyPolicy, Project, render_markdown
+from .models import BlogPost, FeaturedItem, LandingPage, PrivacyPolicy, Project, render_markdown
+
+
+def home(request):
+    landing = LandingPage.objects.first()
+
+    photo_url = None
+    if landing:
+        try:
+            if landing.photo:
+                photo_url = landing.photo.url
+        except ValueError:
+            photo_url = None
+
+    # The FeaturedItem table decides what's on the landing page and in what order.
+    entries_by_id = {entry["id"]: entry for entry in _build_project_entries()}
+    featured_projects = []
+    featured_posts = []
+
+    items = FeaturedItem.objects.filter(is_active=True).select_related("project", "post")
+    for item in items:
+        if item.project_id:
+            entry = entries_by_id.get(item.project_id)
+            if entry:
+                entry = dict(entry)
+                if item.note:
+                    entry["subtitle"] = item.note
+                    entry["summary"] = item.note
+                featured_projects.append(entry)
+        elif item.post_id:
+            post = item.post
+            if post and post.published:
+                featured_posts.append({
+                    "slug": post.slug,
+                    "title": post.title,
+                    "subtitle": (
+                        item.note
+                        or (post.subtitle or "").strip()
+                        or _build_blog_summary(post)
+                    ),
+                    "published_at": post.published_at,
+                })
+
+    return render(request, "homepage/home.html", {
+        "landing": landing,
+        "photo_url": photo_url,
+        "featured_projects": featured_projects,
+        "featured_posts": featured_posts,
+    })
 
 
 def index(request):
