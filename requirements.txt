@@ -31,7 +31,7 @@ sqlparse==0.5.5
 tomli==2.0.1
 typing_extensions==4.15.0
 urllib3==2.7.0
-uvicorn[standard]==0.47.0
+uvicorn[standard]==0.48.0
 wheel==0.37.0
 whitenoise==6.5.0
 zipp==3.17.0
