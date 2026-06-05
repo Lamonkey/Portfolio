@@ -37,14 +37,20 @@ ACCESS_TOKEN_TTL = timedelta(days=7)
 
 
 def _client_to_sdk(client: OAuthClient) -> OAuthClientInformationFull:
-    """Adapt our Django model to the SDK's pydantic ``OAuthClientInformationFull``."""
+    """Adapt our Django model to the SDK's pydantic ``OAuthClientInformationFull``.
+
+    Auth method / grant types / response types are read from the stored row so
+    that dynamically-registered clients (which may be public or request
+    refresh_token) reconstruct exactly as they registered. Pre-registered
+    command clients leave those columns at their defaults.
+    """
     return OAuthClientInformationFull(
         client_id=client.client_id,
-        client_secret=client.client_secret,
+        client_secret=client.client_secret or None,
         redirect_uris=[AnyUrl(u) for u in client.redirect_uris],
-        token_endpoint_auth_method="client_secret_post",
-        grant_types=["authorization_code"],
-        response_types=["code"],
+        token_endpoint_auth_method=client.token_endpoint_auth_method or "client_secret_post",
+        grant_types=list(client.grant_types) or ["authorization_code"],
+        response_types=list(client.response_types) or ["code"],
         scope=" ".join(client.scopes) if client.scopes else None,
         client_name=client.name,
         client_id_issued_at=int(client.created_at.timestamp()),
@@ -66,12 +72,30 @@ class DjangoOAuthProvider(OAuthAuthorizationServerProvider):
         return _client_to_sdk(client) if client else None
 
     async def register_client(self, client_info: OAuthClientInformationFull) -> None:
-        # DCR intentionally disabled; clients are pre-registered via the
-        # ``register_oauth_client`` management command.
-        raise NotImplementedError(
-            "Dynamic client registration is disabled for this server. "
-            "Use the register_oauth_client management command."
-        )
+        """Persist a Dynamic Client Registration (RFC 7591) request.
+
+        The SDK's registration handler has already minted ``client_id`` and (for
+        confidential clients) ``client_secret`` and validated the metadata; we
+        just store it. Registration itself grants nothing — the client still has
+        to clear the Django-superuser gate on ``/authorize`` to obtain a token.
+        """
+
+        def _store():
+            OAuthClient.objects.update_or_create(
+                client_id=client_info.client_id,
+                defaults={
+                    "client_secret": client_info.client_secret or "",
+                    "name": client_info.client_name or "Dynamically registered client",
+                    "redirect_uris": [str(u) for u in client_info.redirect_uris],
+                    "scopes": client_info.scope.split() if client_info.scope else [],
+                    "token_endpoint_auth_method": client_info.token_endpoint_auth_method
+                    or "client_secret_post",
+                    "grant_types": list(client_info.grant_types or []),
+                    "response_types": list(client_info.response_types or []),
+                },
+            )
+
+        await sync_to_async(_store)()
 
     async def authorize(
         self,

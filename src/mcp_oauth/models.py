@@ -17,12 +17,23 @@ from django.utils import timezone
 
 
 class OAuthClient(models.Model):
-    """A pre-registered OAuth 2.0 client (e.g. Claude.ai)."""
+    """An OAuth 2.0 client.
+
+    Clients arrive two ways: pre-registered via the ``register_oauth_client``
+    management command, or self-registered at runtime through Dynamic Client
+    Registration (RFC 7591) at ``/register``. Both paths populate the same row;
+    the extra ``token_endpoint_auth_method`` / ``grant_types`` / ``response_types``
+    fields exist so a DCR client (which may be public/PKCE-only or request
+    refresh_token) round-trips faithfully instead of being forced back into the
+    confidential-client defaults.
+    """
 
     client_id = models.CharField(max_length=64, primary_key=True)
     client_secret = models.CharField(
         max_length=128,
-        help_text="Plaintext — see module docstring for rationale.",
+        blank=True,
+        default="",
+        help_text="Plaintext — see module docstring for rationale. Empty for public (PKCE-only) clients.",
     )
     name = models.CharField(max_length=120, help_text="Human-friendly client name shown in logs.")
     redirect_uris = models.JSONField(
@@ -32,6 +43,19 @@ class OAuthClient(models.Model):
     scopes = models.JSONField(
         default=list,
         help_text="Scopes this client is allowed to request. Empty means no scope restrictions.",
+    )
+    token_endpoint_auth_method = models.CharField(
+        max_length=32,
+        default="client_secret_post",
+        help_text="How the client authenticates at /token: client_secret_post, client_secret_basic, or none.",
+    )
+    grant_types = models.JSONField(
+        default=list,
+        help_text="OAuth grant types the client may use. Empty falls back to ['authorization_code'].",
+    )
+    response_types = models.JSONField(
+        default=list,
+        help_text="OAuth response types the client may use. Empty falls back to ['code'].",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

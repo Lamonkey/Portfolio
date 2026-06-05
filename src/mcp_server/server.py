@@ -6,7 +6,7 @@ import os
 from typing import Optional
 
 from asgiref.sync import sync_to_async
-from mcp.server.auth.settings import AuthSettings
+from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from pydantic import AnyHttpUrl
@@ -70,6 +70,15 @@ def _build_auth() -> tuple[object | None, AuthSettings | None]:
     return DjangoOAuthProvider(), AuthSettings(
         issuer_url=AnyHttpUrl(issuer),
         resource_server_url=AnyHttpUrl(resource),
+        # Enable Dynamic Client Registration (RFC 7591). OAuth-only clients like
+        # Claude.ai self-register at /token-less /register instead of accepting a
+        # hand-issued client_id/secret. Secrets never expire (matches the model,
+        # which has no expiry column). The /authorize superuser gate, not
+        # registration, is the security boundary.
+        client_registration_options=ClientRegistrationOptions(
+            enabled=True,
+            client_secret_expiry_seconds=None,
+        ),
     )
 
 

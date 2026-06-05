@@ -139,6 +139,7 @@ Routes mounted by FastMCP:
 - `/mcp` — same JSON-RPC endpoint, now validated against OAuth-issued access tokens by the SDK's own token middleware.
 - `/authorize` — OAuth authorization endpoint. Wrapped in [`DjangoAdminGateMiddleware`](../src/mcp_oauth/middleware.py) so only a logged-in Django **superuser** can complete the grant. Anyone else is 302'd to `/admin/login/?next=…`.
 - `/token` — OAuth token endpoint. Exchanges an authorization code + PKCE verifier + client_secret for an access token.
+- `/register` — Dynamic Client Registration (RFC 7591). Unauthenticated by spec; persists the new client via `DjangoOAuthProvider.register_client`. Enabled by `ClientRegistrationOptions(enabled=True)` in [`server.py`](../src/mcp_server/server.py).
 - `/.well-known/oauth-authorization-server` — RFC 8414 authorization server metadata.
 - `/.well-known/oauth-protected-resource` — RFC 9728 protected resource metadata.
 
@@ -146,15 +147,34 @@ The legacy `MCP_TOKEN` keeps working — `DjangoOAuthProvider.load_access_token`
 
 #### Registering an OAuth client
 
-OAuth client credentials are issued by a management command (no DCR):
+There are two ways a client gets credentials:
+
+**1. Dynamic Client Registration (DCR, RFC 7591) — the default for modern clients.**
+The metadata advertises a `registration_endpoint` (`/register`), and clients like
+Claude.ai self-register automatically: they POST their `redirect_uris` and metadata,
+the SDK mints a `client_id` (+ `client_secret` for confidential clients), and
+`DjangoOAuthProvider.register_client` persists it into `mcp_oauth_oauthclient`. The
+operator does nothing — just paste the server URL (`https://lamonkey-portfolio.herokuapp.com/mcp`)
+into the connector and complete the browser login.
+
+Registration grants nothing on its own: a freshly registered client still has to
+clear the Django-superuser gate on `/authorize` before it can obtain a token. That
+gate — not registration — is the security boundary. Both public (PKCE-only,
+`token_endpoint_auth_method=none`) and confidential clients are supported and
+round-trip faithfully.
+
+**2. Manual pre-registration via management command — for clients that don't do DCR
+or when you want to issue credentials by hand:**
 
 ```bash
 heroku run -a lamonkey-portfolio "python src/manage.py register_oauth_client \
-  --name 'Claude.ai' \
-  --redirect-uri 'https://claude.ai/api/mcp/auth/callback'"
+  --name 'Some client' \
+  --redirect-uri 'https://example.com/callback'"
 ```
 
-It prints `client_id` and `client_secret` once; both go into the connector form in claude.ai's Settings → Connectors → Add custom connector. The plaintext secret is stored in the `mcp_oauth_oauthclient` table (same threat model as `MCP_TOKEN` in Heroku config).
+It prints `client_id` and `client_secret` once; both go into the connector's manual
+form. The plaintext secret is stored in the `mcp_oauth_oauthclient` table (same threat
+model as `MCP_TOKEN` in Heroku config).
 
 #### How the OAuth dance plays out
 
@@ -170,9 +190,9 @@ Tokens default to a 7-day TTL. There are no refresh tokens in v1; claude.ai re-r
 
 #### Known limitations (v1)
 
-- **Auto-approve consent** — the admin gate ensures only the operator can reach `/authorize`, but once they have, the SDK's auto-issued code is returned with no per-grant "Approve [client_name]?" prompt. Acceptable here because there's a single operator and clients are pre-registered. Adding an HTML consent step would be a follow-up.
-- **No refresh tokens** — clients re-run the full dance every 7 days. Adding refresh is a small extension of the provider.
-- **No Dynamic Client Registration** — clients must be added via `register_oauth_client`. The endpoint isn't even mounted.
+- **Auto-approve consent** — the admin gate ensures only the operator can reach `/authorize`, but once they have, the SDK's auto-issued code is returned with no per-grant "Approve [client_name]?" prompt. Acceptable here because there's a single operator who is the only one able to clear the gate. Adding an HTML consent step would be a follow-up.
+- **No refresh tokens** — DCR clients register with `refresh_token` in their `grant_types` (the SDK requires it), but the provider doesn't issue refresh tokens; a refresh attempt fails and the client re-runs the full dance. With a 7-day access-token TTL that means re-logging-in weekly. Adding refresh is a small extension of the provider.
+- **Open registration** — `/register` is unauthenticated (per the DCR spec), so anyone can create a client row. This is harmless: a client is inert until it passes the superuser `/authorize` gate, and stale/unused client rows can be pruned from the Django admin.
 
 ### Why `MCP_ALLOWED_HOSTS` is needed
 
