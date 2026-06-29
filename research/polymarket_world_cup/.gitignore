@@ -1,0 +1,8 @@
+# Real fetched datasets and trade dumps are not committed (can be large / re-fetchable).
+data/*.json
+data/*.csv
+# ...but keep the committed synthetic sample so the pipeline runs out of the box.
+!data/sample_synthetic.json
+
+__pycache__/
+*.pyc
