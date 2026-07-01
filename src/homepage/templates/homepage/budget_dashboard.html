@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Budget · Project dashboard</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #181b22;
+            --border: #262b35;
+            --text: #e6e8ec;
+            --muted: #8a92a3;
+            --accent: #6ea8fe;
+            --warn: #f0a35e;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .wrap { max-width: 920px; margin: 0 auto; padding: 32px 20px 64px; }
+        h1 { font-size: 22px; margin: 0 0 4px; }
+        .sub { color: var(--muted); margin: 0 0 28px; }
+        .totals { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            flex: 1 1 180px;
+        }
+        .card .num { font-size: 28px; font-weight: 650; }
+        .card .cap { color: var(--muted); font-size: 13px; margin-top: 2px; }
+        h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 32px 0 12px; }
+        .group {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+        .group-head {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+        }
+        .group-head .name { font-weight: 600; }
+        .group-head .name.shared { color: var(--warn); }
+        .group-head .amt { font-variant-numeric: tabular-nums; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 9px 18px; border-top: 1px solid var(--border); }
+        tr:first-child td { border-top: none; }
+        td.amt { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .prov { color: var(--muted); font-size: 13px; }
+        .note { color: var(--warn); font-size: 13px; }
+        .provider-row { display: flex; justify-content: space-between; padding: 8px 18px; border-top: 1px solid var(--border); }
+        .provider-row:first-child { border-top: none; }
+        .empty { color: var(--muted); padding: 24px; text-align: center; }
+        a { color: var(--accent); text-decoration: none; }
+        .foot { margin-top: 40px; color: var(--muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Project budget</h1>
+    <p class="sub">Private overview · active recurring costs, normalized to monthly.</p>
+
+    <div class="totals">
+        <div class="card">
+            <div class="num">${{ monthly_total }}</div>
+            <div class="cap">per month</div>
+        </div>
+        <div class="card">
+            <div class="num">${{ yearly_total }}</div>
+            <div class="cap">per year</div>
+        </div>
+        <div class="card">
+            <div class="num">{{ active_count }}</div>
+            <div class="cap">active cost{{ active_count|pluralize }}</div>
+        </div>
+    </div>
+
+    <h2>By project</h2>
+    {% for group in project_groups %}
+        <div class="group">
+            <div class="group-head">
+                <span class="name">{{ group.title }}</span>
+                <span class="amt">${{ group.monthly_total }}/mo</span>
+            </div>
+            <table>
+                {% for cost in group.costs %}
+                    <tr>
+                        <td>
+                            {{ cost.label }}
+                            {% if cost.provider %}<span class="prov"> · {{ cost.provider }}</span>{% endif %}
+                            {% if cost.notes %}<div class="note">{{ cost.notes }}</div>{% endif %}
+                        </td>
+                        <td class="amt">
+                            ${{ cost.monthly_amount }}/mo
+                            {% if cost.cadence == "yearly" %}<div class="prov">${{ cost.amount }}/yr</div>{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% empty %}
+        {% if not shared_group %}
+            <div class="group"><div class="empty">No costs tracked yet. Add them under a project in the <a href="/admin/homepage/project/">admin</a>.</div></div>
+        {% endif %}
+    {% endfor %}
+
+    {% if shared_group %}
+        <h2>Shared / overhead</h2>
+        <div class="group">
+            <div class="group-head">
+                <span class="name shared">{{ shared_group.title }}</span>
+                <span class="amt">${{ shared_group.monthly_total }}/mo</span>
+            </div>
+            <table>
+                {% for cost in shared_group.costs %}
+                    <tr>
+                        <td>
+                            {{ cost.label }}
+                            {% if cost.provider %}<span class="prov"> · {{ cost.provider }}</span>{% endif %}
+                            {% if cost.notes %}<div class="note">{{ cost.notes }}</div>{% endif %}
+                        </td>
+                        <td class="amt">
+                            ${{ cost.monthly_amount }}/mo
+                            {% if cost.cadence == "yearly" %}<div class="prov">${{ cost.amount }}/yr</div>{% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% endif %}
+
+    {% if provider_totals %}
+        <h2>By provider</h2>
+        <div class="group">
+            {% for name, total in provider_totals %}
+                <div class="provider-row">
+                    <span>{{ name }}</span>
+                    <span class="amt">${{ total }}/mo</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <p class="foot">Manage entries in the <a href="/admin/homepage/projectcost/">cost admin</a> or on each <a href="/admin/homepage/project/">project</a>.</p>
+</div>
+</body>
+</html>

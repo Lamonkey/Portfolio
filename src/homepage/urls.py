@@ -12,4 +12,5 @@ urlpatterns = [
     path("privacy-policy/<slug:slug>/", views.privacy_policy_detail, name="privacy-policy-detail"),
     path("blog/", views.blog_list, name="blog-list"),
     path("blog/<slug:slug>/", views.blog_detail, name="blog-detail"),
+    path("dashboard/budget/", views.budget_dashboard, name="budget-dashboard"),
 ]

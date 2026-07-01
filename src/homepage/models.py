@@ -55,6 +55,91 @@ class Project(models.Model):
         return f"{self.title}"
 
 
+class ProjectCost(models.Model):
+    """A single recurring cost line for the private budget dashboard.
+
+    One row per billed thing — e.g. "Heroku Eco dynos" ($5/mo),
+    "Postgres Essential-0" ($5/mo), "AWS S3" ($1/mo). This is operational
+    data for the site owner only; it is never shown on the public site.
+
+    ``project`` is nullable on purpose: a cost that isn't tied to a single
+    project (a database or box shared across several MVPs, an account-level
+    subscription) is recorded with ``project=None`` and rolled up under a
+    "Shared / overhead" bucket on the dashboard.
+    """
+
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
+    CADENCE_CHOICES = [
+        (MONTHLY, "Monthly"),
+        (YEARLY, "Yearly"),
+    ]
+
+    project = models.ForeignKey(
+        "Project",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="costs",
+        help_text=(
+            "The project this cost belongs to. Leave blank for a shared cost "
+            "(e.g. a database used across several projects, or an "
+            "account-level subscription)."
+        ),
+    )
+    label = models.CharField(
+        max_length=120,
+        help_text="What the charge is, e.g. 'Heroku Eco dynos' or 'Postgres Essential-0'.",
+    )
+    provider = models.CharField(
+        max_length=60,
+        blank=True,
+        default="",
+        help_text="Who bills you, e.g. 'Heroku', 'Neon', 'AWS'. Used for per-provider totals.",
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="The charge per billing period (see cadence). Use the currency you think in.",
+    )
+    cadence = models.CharField(
+        max_length=10,
+        choices=CADENCE_CHOICES,
+        default=MONTHLY,
+        help_text="How often you're billed. Yearly charges are divided by 12 for the monthly rollup.",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Uncheck when you cancel a charge. Inactive costs drop out of the totals but stay for history.",
+    )
+    notes = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Optional reminder, e.g. 'move to Neon free tier' or 'renews in March'.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["project__title", "-amount"]
+        verbose_name = "Project cost"
+        verbose_name_plural = "Project costs"
+
+    @property
+    def monthly_amount(self):
+        """Cost normalized to a per-month figure, for apples-to-apples totals."""
+        from decimal import Decimal
+
+        if self.cadence == self.YEARLY:
+            return (self.amount / Decimal(12)).quantize(Decimal("0.01"))
+        return self.amount
+
+    def __str__(self):
+        where = self.project.title if self.project_id else "Shared"
+        return f"{where} · {self.label} ({self.amount}/{self.cadence})"
+
+
 class BlogPost(models.Model):
     """A casual blog post on jchen42.com/blog/.
 

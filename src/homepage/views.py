@@ -1,9 +1,12 @@
+from decimal import Decimal
+
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.utils.html import strip_tags
 from django.utils.text import slugify
 
-from .models import BlogPost, FeaturedItem, LandingPage, PrivacyPolicy, Project, render_markdown
+from .models import BlogPost, FeaturedItem, LandingPage, PrivacyPolicy, Project, ProjectCost, render_markdown
 
 
 def home(request):
@@ -208,6 +211,63 @@ def privacy_policy_detail(request, slug):
     return render(request, "homepage/privacy_policy_detail.html", {
         "policy": policy,
         "related_projects": related_projects,
+    })
+
+
+@staff_member_required
+def budget_dashboard(request):
+    """Private budget overview — active recurring costs across all projects.
+
+    Only reachable by staff (reuses the admin login). Never linked from the
+    public site. Answers "what am I paying for, and which projects cost money
+    but aren't earning their keep?" at a glance.
+    """
+    costs = (
+        ProjectCost.objects.filter(is_active=True)
+        .select_related("project")
+        .order_by("project__title", "-amount")
+    )
+
+    # Group costs by project (None -> shared/overhead bucket).
+    groups = {}
+    for cost in costs:
+        key = cost.project_id  # None for shared costs
+        if key not in groups:
+            groups[key] = {
+                "project": cost.project,
+                "is_shared": cost.project_id is None,
+                "title": cost.project.title if cost.project_id else "Shared / overhead",
+                "costs": [],
+                "monthly_total": Decimal("0.00"),
+            }
+        groups[key]["costs"].append(cost)
+        groups[key]["monthly_total"] += cost.monthly_amount
+
+    # Shared bucket last, otherwise alphabetical; most expensive first is nicer
+    # for a budget view, so sort project groups by spend descending.
+    project_groups = sorted(
+        (g for g in groups.values() if not g["is_shared"]),
+        key=lambda g: g["monthly_total"],
+        reverse=True,
+    )
+    shared_group = groups.get(None)
+
+    # Per-provider rollup.
+    provider_totals = {}
+    for cost in costs:
+        name = cost.provider.strip() or "Uncategorized"
+        provider_totals[name] = provider_totals.get(name, Decimal("0.00")) + cost.monthly_amount
+    provider_totals = sorted(provider_totals.items(), key=lambda kv: kv[1], reverse=True)
+
+    monthly_total = sum((c.monthly_amount for c in costs), Decimal("0.00"))
+
+    return render(request, "homepage/budget_dashboard.html", {
+        "project_groups": project_groups,
+        "shared_group": shared_group,
+        "provider_totals": provider_totals,
+        "monthly_total": monthly_total,
+        "yearly_total": (monthly_total * 12).quantize(Decimal("0.01")),
+        "active_count": len(costs),
     })
 
 

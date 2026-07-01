@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from .models import BlogPost, FeaturedItem, LandingPage, PrivacyPolicy, Project
+from .models import BlogPost, FeaturedItem, LandingPage, PrivacyPolicy, Project, ProjectCost
+
+
+class ProjectCostInline(admin.TabularInline):
+    """Edit a project's recurring costs right on the project page."""
+
+    model = ProjectCost
+    extra = 0
+    fields = ("label", "provider", "amount", "cadence", "is_active", "notes")
 
 
 @admin.register(LandingPage)
@@ -70,6 +78,7 @@ class BlogPostAdmin(admin.ModelAdmin):
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ("title", "subtitle", "type", "image", "link")
     search_fields = ("title", "subtitle", "meta_description")
+    inlines = (ProjectCostInline,)
     fields = (
         "title",
         "subtitle",
@@ -80,6 +89,31 @@ class ProjectAdmin(admin.ModelAdmin):
         "github_link",
         "image",
     )
+
+
+@admin.register(ProjectCost)
+class ProjectCostAdmin(admin.ModelAdmin):
+    list_display = ("label", "project", "provider", "amount", "cadence", "monthly_amount", "is_active")
+    list_filter = ("is_active", "cadence", "provider")
+    list_editable = ("amount", "cadence", "is_active")
+    search_fields = ("label", "provider", "notes", "project__title")
+    autocomplete_fields = ("project",)
+    readonly_fields = ("created_at", "updated_at")
+    fields = (
+        "project",
+        "label",
+        "provider",
+        "amount",
+        "cadence",
+        "is_active",
+        "notes",
+        "created_at",
+        "updated_at",
+    )
+
+    @admin.display(description="Monthly")
+    def monthly_amount(self, obj):
+        return obj.monthly_amount
 
 
 @admin.register(PrivacyPolicy)
