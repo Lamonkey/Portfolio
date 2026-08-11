@@ -39,6 +39,14 @@ if DEBUG:
             _env_allowed_hosts.append(_dev_host)
 ALLOWED_HOSTS = _env_allowed_hosts
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+
+# We always sit behind a TLS-terminating proxy in production (Fly's edge, as
+# Heroku's router did before it), which forwards plain HTTP to the app and
+# reports the original scheme in X-Forwarded-Proto. Without this, Django
+# thinks every request is insecure and builds http:// absolute URLs — which
+# breaks redirects in the MCP OAuth authorize flow. Locally the header is
+# simply absent, so this is a no-op in development.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # Application definition
 
 INSTALLED_APPS = [

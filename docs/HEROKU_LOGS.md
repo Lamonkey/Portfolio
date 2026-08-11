@@ -1,5 +1,10 @@
 # Checking Heroku Logs & Debugging the Deployment
 
+> **Superseded.** The app is moving to Fly.io — see
+> [`DEPLOY_FLY.md`](./DEPLOY_FLY.md). Keep this around until the Heroku app is
+> destroyed; the `heroku config` / `pg:backups` commands here are what you use
+> to pull the secrets and the database dump across.
+
 A reusable runbook for inspecting the live deployment on Heroku — for both
 humans and agents. The app is the Django + MCP portfolio at
 `https://lamonkey-portfolio.herokuapp.com` (custom domain `jchen42.com`).

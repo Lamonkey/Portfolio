@@ -11,7 +11,16 @@ A static portfolio site implemented with Django.
 
 ### Deployment
 
-Deploy on a platform like Render/Heroku/AWS. Ensure environment variables are set before starting the app.
+Deployed on Fly.io — see [`docs/DEPLOY_FLY.md`](docs/DEPLOY_FLY.md) for the full
+runbook (app creation, Postgres, secrets, domain cutover, day-to-day commands).
+Configuration lives in [`fly.toml`](fly.toml); the image is built from the
+[`Dockerfile`](Dockerfile).
+
+The entrypoint must be **ASGI** (`Portfolio.asgi:application`). Under WSGI the
+site renders fine but `/mcp` and the OAuth routes don't exist at all, since
+they're mounted in `src/Portfolio/asgi.py`.
+
+Ensure environment variables are set before starting the app.
 
 #### Configuration (Environment variables)
 
@@ -32,6 +41,16 @@ Deploy on a platform like Render/Heroku/AWS. Ensure environment variables are se
 -**AWS_ACCESS_KEY_ID**: AWS access key (optional).
 
 -**AWS_SECRET_ACCESS_KEY**: AWS secret key (optional).
+
+MCP-related (see [`docs/MCP_SERVER.md`](docs/MCP_SERVER.md)):
+
+-**MCP_OAUTH_ISSUER_URL**: Public base URL of the app, e.g. `https://example.com`. Setting it enables the OAuth routes; leaving it unset falls back to `MCP_TOKEN` bearer auth.
+
+-**MCP_TOKEN**: Legacy bearer token for `/mcp`. Only used when `MCP_OAUTH_ISSUER_URL` is unset. If neither is set, `/mcp` returns 503.
+
+-**MCP_ALLOWED_HOSTS**: Comma-separated Host header values accepted by the MCP endpoint. **Must include your public hostname after a host or platform change**, or every `/mcp` request returns 421.
+
+-**MCP_ALLOWED_ORIGINS**: Comma-separated Origin header values for browser-based MCP clients.
 
 Example `.env`:
 

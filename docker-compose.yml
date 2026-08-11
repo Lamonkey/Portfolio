@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
@@ -21,10 +19,13 @@ services:
   web:
     build: .
     container_name: portfolio_web
+    # The bind mount below shadows /app, including the staticfiles the image
+    # collected at build time — so collect them again at startup here.
+    # Must be asgi: /mcp and the OAuth routes only exist in Portfolio/asgi.py.
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn --bind 0.0.0.0:8000 Portfolio.wsgi:application"
+             python -m uvicorn Portfolio.asgi:application --host 0.0.0.0 --port 8000"
     volumes:
       - ./src:/app
     ports:
